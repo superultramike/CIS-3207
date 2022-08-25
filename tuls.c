@@ -23,23 +23,16 @@ int main(int argc, char **argv) {
     for(int i=0; i<argc; i++) {
         printf("Argument: %s\n", argv[i]);
     }
-
-    stat(argv[0], &sb);
-    if(S_ISREG(sb.st_mode)) {
-        printf("This is a file\n");
-    }
     */
 
     n = scandir(".", &namelist, NULL, alphasort);
-    //printf("Number of Files/directs total: %d\n", n);
     if (n == -1) {
         perror("scandir");
-        exit(EXIT_FAILURE);
+        exit(1);
     }
 
     while (n--) {
         //printf("%s\n", namelist[n]->d_name);
-        //printf("Number of Files/directs left %d\n", n);
         stat(namelist[n]->d_name, &sb);
         if(S_ISREG(sb.st_mode)) {
             printf("%s is a file\n", namelist[n]->d_name);
@@ -51,5 +44,5 @@ int main(int argc, char **argv) {
     }
     free(namelist);
 
-    exit(EXIT_SUCCESS);
+    exit(0);
 }
