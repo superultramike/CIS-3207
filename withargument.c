@@ -7,36 +7,42 @@
 #include <sys/stat.h>
 
 int main(int argc, char *argv[]) {
-    DIR *dir;
-    struct dirent* dp;
+    DIR *d;
+    struct dirent* dir;
 
-    // no path
+    // if one argument is provided do this process
     if (argc == 1) {
+        // specifies that we are looking at the current directory with ./
         argv[1] = ".";
-        dir = opendir(argv[1]);
+        // declare the DIR stream pointer to the position of argument 1 which is a "./"
+        d = opendir(argv[1]);
 
+        // Do this process while we still have a directory or file available.
         do {
-            dp = readdir(dir);
-            if (dp) {
-                printf("%s \n", dp->d_name);
-            }
-        } while (dp);
 
-        closedir(dir);
+            dir = readdir(d);
+            if (dir) {
+                printf("%s \n", dir->d_name);
+            }
+        } while (dir);
+
+        closedir(d);
     }
 
-    // path provided
+    // if more then one argument is provided do this process
     if (argc > 1) {
-        dir = opendir(argv[1]);
+        // declare the DIR stream pointer to the position of argument 1 which is something..?
+        d = opendir(argv[1]);
 
+        // Do this process while we still have a directory or file available
         do {
-            dp = readdir(dir);
-            if (dp) {
-                printf("%s \n", dp->d_name);
+            dir = readdir(d);
+            if (dir) {
+                printf("%s \n", dir->d_name);
             }
-        } while (dp);
+        } while (dir);
 
-        closedir(dir);
+        closedir(d);
     }
 
     return 0;
