@@ -6,74 +6,55 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-void recursive_dir(int indent, char * pathname);
+void listFiles(char* dirname);
 
 int main(int argc, char *argv[]) {
-    char pathname[100];
+    if(argc == 1) {
+        listFiles(".");
+        return 0;
+    }
 
-    printf("path: ");
-    scanf("%s", pathname);
+    if(argc == 2) {
+        listFiles(argv[1]);
+        return 0;
+    }
 
-    recursive_dir(0, pathname);
+    if(argc > 2) {
+        printf("Too many arguments");
+        return 1;
+    }
 
     return 0;
 }
 
-void recursive_dir(int indent, char * pathname) {
-    char path[1000];
-    DIR *dir = opendir(pathname);
-    struct dirent* dp;
+void listFiles(char* dirname) {
+    DIR* dir = opendir(dirname);
 
-    if (!dir) {
+    if(dir == NULL) {
         return;
     }
 
-    // While there is still a file or directory to scan do this
-    while((dp = readdir(dir)) != NULL) {
-        //
-        if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0) {
-            printf("%s\n", dp->d_name);
+    printf("Reading files in: %s\n", dirname);
 
-            strcpy(path, pathname);
+    struct dirent* entity;
+
+    // either gives us NULL or something
+    entity = readdir(dir);
+    // while it still has something to read perform this action
+    while(entity != NULL) {
+        printf("%s/%s\n", dirname, entity->d_name);
+        if(entity->d_type == DT_DIR && strcmp(entity->d_name, ".") != 0 && strcmp(entity->d_name, "..") != 0) {
+            char path[1000] = {0};
+            strcat(path, dirname);
+            // adds the slash to the path name
             strcat(path, "/");
-            strcat(path, dp->d_name);
-            recursive_dir(indent+2, path);
+            // adds file path to that name
+            strcat(path, entity->d_name);
+            // then sends the newly constructed char to the function over again
+            listFiles(path);
         }
+        entity = readdir(dir);
     }
 
     closedir(dir);
-
-    /*
-    //If no args
-    if (argc == 1) {
-        argv[1] = ".";
-        dir = opendir(argv[1]);
-
-        do {
-            dp = readdir(dir);
-
-            if (dp) {
-                printf("%s \n", dp->d_name);
-
-            }
-        } while (dp);
-
-        closedir(dir);
-    }
-
-    //If specified directory
-    if (argc > 1) {
-        argv[1] = "..";
-        dir = opendir(argv[1]);
-
-        do {
-            dp = readdir(dir);
-            if (dp) {
-                printf("%s \n", dp->d_name);
-            }
-        } while (dp);
-
-        closedir(dir);
-    }
-    */
 }

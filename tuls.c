@@ -6,43 +6,63 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-// Prototype for recursive function
-// void recursive_dir(int indent, char * pathname);
+// Function Prototype
+void listFiles(char* dirname);
 
-int main(int argc, char **argv) {
-    struct dirent **namelist;
-    struct stat sb;
-    int n;
-
-    // print the # of arguments passed to program
-    //printf("Argv[1]: %s\n", argv[1]);
-    //printf("Number of arguments: %d\n", argc);
-
-    //print out the string for each argument
-    /*
-    for(int i=0; i<argc; i++) {
-        printf("Argument: %s\n", argv[i]);
-    }
-    */
-
-    n = scandir(".", &namelist, NULL, alphasort);
-    if (n == -1) {
-        perror("scandir");
-        exit(1);
+int main(int argc, char *argv[]) {
+    // If the user gives no path, then print the current directory tuls in placed in
+    if(argc == 1) {
+        listFiles(".");
+        return 0;
     }
 
-    while (n--) {
-        //printf("%s\n", namelist[n]->d_name);
-        stat(namelist[n]->d_name, &sb);
-        if(S_ISREG(sb.st_mode)) {
-            printf("%s is a file\n", namelist[n]->d_name);
+    // If the user gives a path, then print all the contents of user given path
+    if(argc == 2) {
+        listFiles(argv[1]);
+        return 0;
+    }
+
+    // If more then 1 path is given then print out the error message that there are too many arguments
+    if(argc > 2) {
+        printf("Too many arguments");
+        return 1;
+    }
+
+    return 0;
+}
+
+// Function that recursively prints the files and directory contents of a current/given directory
+void listFiles(char* dirname) {
+    DIR* dir = opendir(dirname);
+
+    if(dir == NULL) {
+        return;
+    }
+
+    // Visual cue for when it's reading into a directory
+    printf("Reading files in: %s\n", dirname);
+
+    // Declare
+    struct dirent* entity;
+
+    // either gives us NULL or something
+    entity = readdir(dir);
+    // while it still has something to read perform this action
+    while(entity != NULL) {
+        printf("%s/%s\n", dirname, entity->d_name);
+        if(entity->d_type == DT_DIR && strcmp(entity->d_name, ".") != 0 && strcmp(entity->d_name, "..") != 0) {
+            char path[1000] = {0};
+            strcat(path, dirname);
+            // adds the slash to the path name
+            strcat(path, "/");
+            // adds file path to that name
+            strcat(path, entity->d_name);
+            // then sends the newly constructed char to the function over again
+            listFiles(path);
         }
-        if(S_ISDIR(sb.st_mode)) {
-            printf("%s is a directory\n", namelist[n]->d_name);
-        }
-        free(namelist[n]);
+        // assign the entity to the contents when it is read by readdir function
+        entity = readdir(dir);
     }
-    free(namelist);
-
-    exit(0);
+    // close the directory once you are done reading
+    closedir(dir);
 }
