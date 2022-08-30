@@ -42,7 +42,6 @@ void listFiles(char* dirname) {
     // Visual cue for when it's reading into a directory
     printf("Reading files in: %s\n", dirname);
 
-    // Declare
     struct dirent* entity;
 
     // either gives us NULL or something
