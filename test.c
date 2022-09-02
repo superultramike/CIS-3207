@@ -1,60 +1,43 @@
-#include <stdlib.h>
-#include <dirent.h>
 #include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-void listFiles(char* dirname);
+int main(int argn, char * argv[]) {
+    int src_fd, dst_fd, n, err;
+    unsigned char buffer[4096];
+    char * src_path, dst_path;
 
-int main(int argc, char *argv[]) {
-    if(argc == 1) {
-        listFiles(".");
-        return 0;
+    // Assume that the program takes two arguments the source path followed
+    // by the destination path.
+
+    if (argn != 3) {
+        printf("Wrong argument count.\n");
+        exit(1);
     }
 
-    if(argc == 2) {
-        listFiles(argv[1]);
-        return 0;
-    }
+    src_path = argv[1];
+    dst_path = argv[2];
 
-    if(argc > 2) {
-        printf("Too many arguments");
-        return 1;
-    }
+    src_fd = open(src_path, O_RDONLY);
+    dst_fd = open(dst_path, O_CREAT | O_WRONLY);
 
-    return 0;
-}
-
-void listFiles(char* dirname) {
-    DIR* dir = opendir(dirname);
-
-    if(dir == NULL) {
-        return;
-    }
-
-    printf("Reading files in: %s\n", dirname);
-
-    struct dirent* entity;
-
-    // either gives us NULL or something
-    entity = readdir(dir);
-    // while it still has something to read perform this action
-    while(entity != NULL) {
-        printf("%s/%s\n", dirname, entity->d_name);
-        if(entity->d_type == DT_DIR && strcmp(entity->d_name, ".") != 0 && strcmp(entity->d_name, "..") != 0) {
-            char path[1000] = {0};
-            strcat(path, dirname);
-            // adds the slash to the path name
-            strcat(path, "/");
-            // adds file path to that name
-            strcat(path, entity->d_name);
-            // then sends the newly constructed char to the function over again
-            listFiles(path);
+    while (1) {
+        err = read(src_fd, buffer, 4096);
+        if (err == -1) {
+            printf("Error reading file.\n");
+            exit(1);
         }
-        entity = readdir(dir);
-    }
+        n = err;
 
-    closedir(dir);
+        if (n == 0) break;
+
+        err = write(dst_fd, buffer, n);
+        if (err == -1) {
+            printf("Error writing to file.\n");
+            exit(1);
+        }
+    }
+    close(src_fd);
+    close(dst_fd);
 }
