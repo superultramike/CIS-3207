@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
 
     // If more then 1 path is given then print out the error message that there are too many arguments
     if(argc > 2) {
-        printf("Too many arguments");
+        printf("Too many arguments\n");
         return 1;
     }
 
