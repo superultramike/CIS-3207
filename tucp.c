@@ -7,20 +7,37 @@
     // if the directory doesn't exist then create it
 
 #include <stdio.h>
+#include <string.h>
 
 void copyFiles(char *file, char *copy);
 
 int main(int argc, char *argv[]) {
+
+
     // Not enough arguments
     if(argc < 3) {
         printf("Not enough arguments\n");
         return 1;
     }
 
-    // File to file or File to directory?
+    /*
+    // WORKS WITH BOTH
     if (argc == 3) {
         copyFiles(argv[1], argv[2]);
         return 0;
+    }
+    */
+
+    if (argc > 2) {
+        // 0 is tucp, 1 is the first file, argc-1 is the directory
+        for (int i=0; i<argc-2; i++) {
+            // combine first file to the directory
+            printf("last argument is: %s\n", argv[argc-1]);
+            printf("addition is: %s\n", argv[i+1]);
+            // RENAME AND MAKE A NEW STRING DONT EDIT THE ORIGINALS
+            printf("combined path is: %s\n", strcat(argv[argc-1], argv[i+1]));
+            copyFiles(argv[i+1], strcat(argv[argc-1], argv[i+1]));
+        }
     }
 
     return 0;
