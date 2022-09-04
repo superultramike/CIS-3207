@@ -20,23 +20,24 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    /*
     // WORKS WITH BOTH
     if (argc == 3) {
         copyFiles(argv[1], argv[2]);
         return 0;
     }
-    */
 
     if (argc > 2) {
         // 0 is tucp, 1 is the first file, argc-1 is the directory
         for (int i=0; i<argc-2; i++) {
             // combine first file to the directory
-            printf("last argument is: %s\n", argv[argc-1]);
-            printf("addition is: %s\n", argv[i+1]);
-            // RENAME AND MAKE A NEW STRING DONT EDIT THE ORIGINALS
-            printf("combined path is: %s\n", strcat(argv[argc-1], argv[i+1]));
-            copyFiles(argv[i+1], strcat(argv[argc-1], argv[i+1]));
+            //printf("Last argument: %s\n", argv[argc-1]);
+            //printf("file source: %s\n", argv[i+1]);
+            char plain_copy[50];
+            strcpy(plain_copy, argv[argc-1]);
+            //printf("copy: %s\n", plain_copy);
+            //printf("combined path: %s\n", );
+            strcat(plain_copy, argv[i+1]);
+            copyFiles(argv[i+1], plain_copy);
         }
     }
 
