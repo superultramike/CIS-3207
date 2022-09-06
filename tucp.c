@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    if (argc > 2) {
+    if (argc >= 4) {
         // 0 is tucp, 1 is the first file, argc-1 is the directory
         for (int i=0; i<argc-2; i++) {
             // combine first file to the directory
