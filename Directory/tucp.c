@@ -6,7 +6,6 @@
 
 // copy multiple files into a directory
     // if the directory doesn't exist then create it
-// ./tucp test.c tuls.c tucp.c ./Directory/
 
 #include <stdlib.h>
 #include <dirent.h>
