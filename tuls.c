@@ -6,69 +6,69 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-void copyFiles(char *file, char *copy);
+// Function Prototype
+void listFiles(char* dirname);
 
+// Main function
 int main(int argc, char *argv[]) {
-    struct stat buf;
-
-    // Not enough arguments
-    if(argc < 3) {
-        printf("Not enough arguments\n");
-        return 1;
-    }
-
-    // WORKS WITH BOTH
-    if (argc == 3) {
-        stat(argv[2], &buf);
-        if(S_ISDIR(buf.st_mode)) {
-            //printf("It's a directory\n");
-            char copy[50];
-            strcpy(copy, argv[2]);
-            strcat(copy, argv[1]);
-            copyFiles(argv[1], copy);
-        }
-        else {
-            //printf("It's a file\n");
-            copyFiles(argv[1], argv[2]);
-        }
+    // If the user gives no path, then print the current directory tuls in placed in
+    if(argc == 1) {
+        listFiles(".");
         return 0;
     }
 
-    if (argc >= 4) {
-        // 0 is tucp, 1 is the first file, argc-1 is the directory
-        for (int i=0; i<argc-2; i++) {
-            // combine first file to the directory
-            //printf("Last argument: %s\n", argv[argc-1]);
-            //printf("file source: %s\n", argv[i+1]);
-            char plain_copy[50];
-            strcpy(plain_copy, argv[argc-1]);
-            //printf("copy: %s\n", plain_copy);
-            //printf("combined path: %s\n", );
-            strcat(plain_copy, argv[i+1]);
-            copyFiles(argv[i+1], plain_copy);
-        }
+    // If the user gives a path, then print all the contents of user given path
+    if(argc == 2) {
+        listFiles(argv[1]);
+        return 0;
+    }
+
+    // If more then 1 path is given then print out the error message that there are too many arguments
+    if(argc > 2) {
+        printf("tuls: cannot open directory");
+        return 1;
     }
 
     return 0;
 }
 
-void copyFiles(char *file, char *copy) {
-    FILE *fileOP, *copyOP;
-    // open the file for reading, and the copy for writing
-    fileOP = fopen(file, "r");
-    copyOP = fopen(copy, "w");
+// Function that recursively prints the files and directory contents of a current/given directory
+void listFiles(char* dirname) {
+    DIR* dir = opendir(dirname);
 
-    // exit if the file(s) could not be opened
-    if (fileOP == NULL || copyOP == NULL) {
-        printf("Error opening file(s).\n");
+    if(dir == NULL) {
+        return;
     }
 
-    // copy the content from the file to the copy one character at a time
-    char c;
-    while ( (c = fgetc(fileOP)) != EOF )
-        fputc(c, copyOP);
+    // Visual cue for when it's reading into a directory
+    printf("Reading files in: %s\n", dirname);
 
-    // close the files when we are done with them
-    fclose(fileOP);
-    fclose(copyOP);
+    struct dirent* entity;
+
+    // either gives us NULL or something to read
+    entity = readdir(dir);
+    // while it still has something to read perform this action
+    while(entity != NULL) {
+        // prints the filepath and then the name of element
+        printf("%s/%s\n", dirname, entity->d_name);
+        // if the entity is a directory and the name of the entity isn't a relative or parent directory that was already printed
+        if(entity->d_type == DT_DIR && strcmp(entity->d_name, ".") != 0 && strcmp(entity->d_name, "..") != 0) {
+            // gives enough characters to build new strings for new pathnames
+            char path[1000] = {0};
+            // adds the original pathname
+            strcat(path, dirname);
+            // adds the slash to the pathname
+            strcat(path, "/");
+            // adds new file path to old file path
+            strcat(path, entity->d_name);
+            // then sends the newly constructed file path to the function over again
+            // to actually print out it contents
+            listFiles(path);
+        }
+        // assign the entity to the contents when it is read by readdir function
+        // if there is nothing to read then you break out of the loop
+        entity = readdir(dir);
+    }
+    // close the directory once you are done reading
+    closedir(dir);
 }
