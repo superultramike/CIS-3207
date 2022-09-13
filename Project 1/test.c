@@ -1,25 +1,22 @@
 #include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
+#include <stdlib.h> // For exit()
 
-void main(int argc, char **argv) {
-    int pid;
-    // scan the given pid in user argument
-    sscanf(argv[1], "%d", &pid);
-    // print the given pid in user argument
-    printf("pid = %d\n", pid);
+int main(int argc, char **argv) {
+    FILE *fptr;
+    char c;
 
-    // using the given user pid, open the specific proc stat file for given pid
-    char filename[1000];
-    sprintf(filename, "/proc/%d/stat", pid);
-    FILE *f = fopen(filename, "r");
+    fptr = fopen("/proc/1721/stat", "r");
+    if(fptr == NULL) {
+        printf("Cannot open file\n");
+        exit(0);
+    }
 
-    int unused, ppid;
-    char comm[1000], state;
-    fscanf(f, "%d %s %c %d", &unused, comm, &state, &ppid);
-    printf("comm = %s\n", comm);
-    printf("state = %c\n", state);
-    printf("parent pid = %d\n", ppid);
-    fclose(f);
+    c = fgetc(fptr);
+    while(c != EOF) {
+        printf("%c", c);
+        c = fgetc(fptr);
+    }
+
+    fclose(fptr);
+    return 0;
 }
