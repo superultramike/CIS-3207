@@ -7,7 +7,7 @@ int main(int argc, char **argv) {
     char *arg = 0;
     size_t size = 0;
     while(getdelim(&arg, &size, 0, meminfo) != -1) {
-        printf("%s\n", arg);
+        printf(" %s\n", arg);
     }
     free(arg);
     fclose(meminfo);
