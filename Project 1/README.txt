@@ -9,10 +9,16 @@ it's key components (aka the project features from the PDF assignment).
 	This will display process information (although I'm not what process info specifically).
 		I want to extract the pid that the user enters (through scanf) and then get data from said /proc/ file	
 	If this user doesn't provide pid then just display information for all processes of the current user
+		- Use /proc scanning function to see every PID
+		- then determine UID
+		- then compare UID to the /proc/[pid]/loginuid
+			- if they are the same, it's a valid PID
+			- if they aren't the same, then don't do anything
 		I need a loop through every process present on said user "ps a" as an example and then delimit the first '\0' and print
 		
 		BECAUSE OF THIS CONDITION ALL FUNCTIONS BELOW WILL BE PRESENT INSIDE OF A LOOP, WHERE THE AMOUNT OF CYCLES IS DETERMINED
 		BY HOW MANY PROCESSES ARE EXTRACTED FROM THIS INITIAL FUNCTION.
+		
 			So if there is one process detected then the loop in each function step below will run 1 time (and n-times)	
 	
 #2 step is to implement -s (EASY DIFFICULTY)

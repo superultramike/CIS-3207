@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 int main(int argc, char **argv) {
-    FILE *cpuinfo = fopen("/proc/cpuinfo", "rb");
+    FILE *cpuinfo = fopen("/proc/self/loginuid", "rb");
     char *arg = 0;
     size_t size = 0;
     while(getdelim(&arg, &size, 0, cpuinfo) != -1) {
