@@ -1,2 +1,2 @@
-hellomake: getopt.c
-	gcc -o hellomake getopt.c -Wall -Werror
+hellomake: MYps.c
+	gcc -o hellomake MYps.c -Wall -Werror
