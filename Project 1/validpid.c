@@ -1,13 +1,15 @@
 #include <stdio.h>
-#include <stdlib.h> // For exit()
+#include <stdlib.h>
 #include <dirent.h>
 #include <errno.h>
+#define MAX_SIZE 1024
 
-void process_all_processes (void);
+void process_all_processes ();
 int find_valid_pids (char *charPID);
 
 int main() {
     process_all_processes();
+
     return 0;
 }
 
@@ -26,15 +28,27 @@ void process_all_processes (void) {
         exit (EXIT_FAILURE);
     }
 
+    int p[MAX_SIZE];
+    int i=0;
+
     while (dirent = readdir (dir)) {
         // we are only interested in process IDs
         if (atoi(dirent -> d_name) != 0) {
-            //pid = atoi (dirent -> d_name);
             // A string version of the PID
             //printf("PID: %s\n", dirent->d_name);
-            find_valid_pids(dirent->d_name);
+            if(find_valid_pids(dirent->d_name) == 1) {
+                pid = atoi (dirent -> d_name);
+                p[i] = pid;
+                printf("p[%d] = %d\n", i, p[i]);
+                i++;
+            }
         }
     }
+
+    for(i=0; i<MAX_SIZE; i++) {
+        printf("p[%d] = %d\n", i , p[i]);
+    }
+
     closedir (dir);
 }
 
@@ -47,7 +61,6 @@ int find_valid_pids (char *charPID) {
 
     char uid[1000];
     fscanf(f, "%s", uid);
-    //printf("UID of PID %s is %s\n", pid, uid);
 
     // obtain the TRUE SELF uid
     FILE *uidInfo = fopen("/proc/self/loginuid", "rb");
@@ -59,11 +72,9 @@ int find_valid_pids (char *charPID) {
     }
     fclose(uidInfo);
 
-    //printf("UID IS: %s\n", selfuid);
     if(strcmp(selfuid, uid) == 0) {
         //printf("PID %s has the same UID %s as selfUID %s\n", charPID, uid, selfuid);
-        pid = atoi(charPID);
-        printf("Valid PID: %d\n", pid);
-        return pid;
+        // Valid pid is found
+        return 1;
     }
 }
