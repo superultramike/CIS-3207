@@ -7,8 +7,15 @@
 void process_all_processes ();
 int find_valid_pids (char *charPID);
 
+int p[MAX_SIZE];
+int i = 0;
+
 int main() {
     process_all_processes();
+
+    for(int j=0; j<i; j++) {
+        printf("in main - p[%d] = %d\n", j, p[j]);
+    }
 
     return 0;
 }
@@ -28,8 +35,8 @@ void process_all_processes (void) {
         exit (EXIT_FAILURE);
     }
 
-    int p[MAX_SIZE];
-    int i=0;
+    //int p[MAX_SIZE];
+    //int i=0;
 
     while (dirent = readdir (dir)) {
         // we are only interested in process IDs
@@ -39,14 +46,14 @@ void process_all_processes (void) {
             if(find_valid_pids(dirent->d_name) == 1) {
                 pid = atoi (dirent -> d_name);
                 p[i] = pid;
-                printf("p[%d] = %d\n", i, p[i]);
+                //printf("inside - p[%d] = %d\n", i, p[i]);
                 i++;
             }
         }
     }
 
-    for(i=0; i<MAX_SIZE; i++) {
-        printf("p[%d] = %d\n", i , p[i]);
+    for(int j=0; j<i; j++) {
+        printf("in function - p[%d] = %d\n", j, p[j]);
     }
 
     closedir (dir);
