@@ -1,10 +1,13 @@
 // library imports
+#include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
 #include <errno.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #define MAX_SIZE 1024
 
 // function prototypes
@@ -14,7 +17,7 @@ void printStime(int pid);
 void printUtime(int pid);
 void printStat(int pid);
 void printSize(int pid);
-void printCmdline(int pid);
+void print_cmdline(int pid);
 
 // global variables
 int p[MAX_SIZE];
@@ -85,7 +88,7 @@ int main(int argc, char *argv[]) {
         }
         // if -c wasn't present then print cmdline
         if(cflag == 0) {
-            printCmdline(pid);
+            print_cmdline(pid);
         }
     }
 
@@ -96,7 +99,7 @@ int main(int argc, char *argv[]) {
         // loop through PID array and apply print functions to every PID
         for(int j=0; j<i; j++) {
             // print the PID
-            printf("PID is %d", p[j]);
+            printf("PID: %d", p[j]);
             // if -s is present, print STATE
             if(sflag == 1) {
                 printStat(p[j]);
@@ -115,7 +118,7 @@ int main(int argc, char *argv[]) {
             }
             // if -c wasn't present then print cmdline
             if(cflag == 0) {
-                printCmdline(p[j]);
+                print_cmdline(p[j]);
             }
             printf("\n");
         }
@@ -255,20 +258,32 @@ void printStime(int pid) {
     fclose(f);
 }
 
-// function to print cmdline
-void printCmdline(int pid) {
-    // open proc file where cmdline is stored
-    char filename[1000];
-    sprintf(filename, "/proc/%d/cmdline", pid);
-    FILE *f = fopen(filename, "r");
+// prints the argument list, of the process
+void print_cmdline(int pid) {
+    int fd;
+    char filename[24];
+    char arg_list[1024];
+    size_t length;
+    char* next_arg;
 
-    // acquire cmdline from proc file
-    char cmdline[1000];
-    fscanf(f, "%s", cmdline);
-    printf(" cmdline: %s ", cmdline);
+    // Generate the name of the cmdline for the process
+    snprintf(filename, sizeof(filename), "/proc/%d/cmdline", pid);
+    // read the contents of the file
+    fd = open(filename, O_RDONLY);
+    length = read(fd, arg_list, sizeof(arg_list));
+    close(fd);
+    // read does not NUL-terminate the buffer, so do it here
+    arg_list[length] = '\0';
 
-    // close file since we have needed data
-    fclose(f);
+    printf("cmdline: ");
+    // loop over arguments. arguments are separated by NULs
+    next_arg = arg_list;
+    while(next_arg < arg_list + length) {
+        // print the argument. each is NUL-terminated so just treat it like a string
+        printf("%s ", next_arg);
+        // advance to the next argument. Since each argument is NUL-terminated, strlen counts the length of the next argument, not the entire argument list
+        next_arg += strlen(next_arg) + 1;
+    }
 }
 
 // function to print state
