@@ -1,0 +1,15 @@
+SYNOPSIS
+	MYps is a program is simple version of the ps command. It is executed from the commandline 
+	and has a variety of functions to display for any said process
+
+DESCRIPTION
+		As stated above the user can provide an variety of arguments to the program to execute.
+	All user input is sourced through a while loop that calls the getopt function to seek a user input character
+	Once getopt finds the specific character in the cmdline using a switch case, it will raise a flag to be
+	referred to late once the beginning argument scanning is done. MYps has two main roads that the user can go on.
+	The user can either input one PID and have it's info displayed or no PID can be provided and all the info of all
+	processes will be displayed. I will explain these two main divergent "roads" below
+	
+	
+
+RESULTS

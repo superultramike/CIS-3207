@@ -1,10 +1,13 @@
 // library imports
+#include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
 #include <errno.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #define MAX_SIZE 1024
 
 // function prototypes
@@ -14,7 +17,7 @@ void printStime(int pid);
 void printUtime(int pid);
 void printStat(int pid);
 void printSize(int pid);
-void printCmdline(int pid);
+void print_cmdline(int pid);
 
 // global variables
 int p[MAX_SIZE];
@@ -66,7 +69,7 @@ int main(int argc, char *argv[]) {
     // if a PID is provided
     if(pflag == 1) {
         // print the PID
-        printf("PID is %d", pid);
+        printf("PID is %d\t", pid);
         // if -s is present, print STATE
         if(sflag == 1) {
             printStat(pid);
@@ -85,7 +88,7 @@ int main(int argc, char *argv[]) {
         }
         // if -c wasn't present then print cmdline
         if(cflag == 0) {
-            printCmdline(pid);
+            print_cmdline(pid);
         }
     }
 
@@ -96,7 +99,7 @@ int main(int argc, char *argv[]) {
         // loop through PID array and apply print functions to every PID
         for(int j=0; j<i; j++) {
             // print the PID
-            printf("PID is %d", p[j]);
+            printf("PID: %d\t", p[j]);
             // if -s is present, print STATE
             if(sflag == 1) {
                 printStat(p[j]);
@@ -115,7 +118,7 @@ int main(int argc, char *argv[]) {
             }
             // if -c wasn't present then print cmdline
             if(cflag == 0) {
-                printCmdline(p[j]);
+                print_cmdline(p[j]);
             }
             printf("\n");
         }
@@ -174,19 +177,28 @@ int find_valid_pids (char *charPID) {
     char *selfuid = 0;
     size_t size = 0;
 
+    // Error checking for opening files
+    if(f == NULL || uidInfo == NULL) {
+        printf("Error opening file(s).\n");
+    }
+
     // scan given file while there is content
     while(getdelim(&selfuid, &size, 0, uidInfo) != -1) {
         // the only content present is the TRUE UID
         fscanf(uidInfo, "%s", selfuid);
     }
     fclose(uidInfo);
+    fclose(f);
 
     // if true UID and UID of specific PID match...
     if(strcmp(selfuid, uid) == 0) {
         // ...then return true
         return 1;
     }
-    return 0;
+    // if false then they don't match
+    else {
+        return 0;
+    }
 }
 
 // function to print Utime
@@ -197,6 +209,11 @@ void printUtime(int pid) {
     FILE *f = fopen(filename, "rb");
     char *arg;
     size_t size = 0;
+
+    // Error checking for opening files
+    if (f == NULL) {
+        printf("Error opening file(s).\n");
+    }
 
     // scan given file while there is content
     while(getdelim(&arg, &size, 0, f) != -1) {
@@ -213,7 +230,7 @@ void printUtime(int pid) {
             tokenCount++;
             // once token reaches 13th element the next token (the 14th) is the uTime
             if(tokenCount == 13) {
-                printf(" UTIME: %s ", token);
+                printf("UTIME: %s\t", token);
                 break;
             }
         }
@@ -231,6 +248,11 @@ void printStime(int pid) {
     char *arg;
     size_t size = 0;
 
+    // Error checking for opening files
+    if (f == NULL) {
+        printf("Error opening file(s).\n");
+    }
+
     // scan given file while there is content
     while(getdelim(&arg, &size, 0, f) != -1) {
         // use a space as a token since all elements in stat are separated by a space
@@ -246,7 +268,7 @@ void printStime(int pid) {
             tokenCount++;
             // once token reaches 13th element, the next token (the 14th) is the sTime
             if(tokenCount == 14) {
-                printf(" STIME: %s ", token);
+                printf("STIME: %s\t", token);
                 break;
             }
         }
@@ -255,20 +277,34 @@ void printStime(int pid) {
     fclose(f);
 }
 
-// function to print cmdline
-void printCmdline(int pid) {
-    // open proc file where cmdline is stored
-    char filename[1000];
-    sprintf(filename, "/proc/%d/cmdline", pid);
-    FILE *f = fopen(filename, "r");
+// prints the argument list, of the process
+void print_cmdline(int pid) {
+    // Starter variables
+    int fd;
+    char filename[24];
+    char arg_list[1024];
+    size_t length;
+    char* next_arg;
 
-    // acquire cmdline from proc file
-    char cmdline[1000];
-    fscanf(f, "%s", cmdline);
-    printf(" cmdline: %s ", cmdline);
+    // Generate the name of the cmdline for the process
+    snprintf(filename, sizeof(filename), "/proc/%d/cmdline", pid);
+    // read the contents of the file
+    fd = open(filename, O_RDONLY);
+    // length is equal to the size of a specific argument in cmdline
+    length = read(fd, arg_list, sizeof(arg_list));
+    close(fd);
+    // indicate a null byte at the end of the argument line
+    arg_list[length] = '\0';
 
-    // close file since we have needed data
-    fclose(f);
+    printf("cmdline: ");
+    // loop over arguments. argu are separated by NULs
+    next_arg = arg_list;
+    while(next_arg < arg_list + length) {
+        // print the argument
+        printf("%s ", next_arg);
+        // advance to the next argument
+        next_arg += strlen(next_arg) + 1;
+    }
 }
 
 // function to print state
@@ -278,12 +314,17 @@ void printStat(int pid) {
     sprintf(filename, "/proc/%d/stat", pid);
     FILE *f = fopen(filename, "r");
 
+    // Error checking for opening files
+    if (f == NULL) {
+        printf("Error opening file(s).\n");
+    }
+
     // acquire state from proc file
     // with how fscanf works we can't "skip" to the 4th element where state is
     int unused, ppid;
     char arr[1000], state;
     fscanf(f, "%d %s %c %d", &unused, arr, &state, &ppid);
-    printf(" State: %c ", state);
+    printf("State: %c\t", state);
 
     // close file since we have needed data
     fclose(f);
@@ -296,10 +337,15 @@ void printSize(int pid) {
     sprintf(filename, "/proc/%d/statm", pid);
     FILE *f = fopen(filename, "r");
 
+    // Error checking for opening files
+    if (f == NULL) {
+        printf("Error opening file(s).\n");
+    }
+
     // acquire size from proc file
     int size;
     fscanf(f, "%d", &size);
-    printf(" Size: %d ", size);
+    printf("Size: %d\t", size);
 
     // close file since we have needed data
     fclose(f);
