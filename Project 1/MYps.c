@@ -90,6 +90,7 @@ int main(int argc, char *argv[]) {
         if(cflag == 0) {
             print_cmdline(pid);
         }
+	printf("\n");
     }
 
     // if a PID isn't provided aka run through all pids
