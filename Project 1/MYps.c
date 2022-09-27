@@ -1,3 +1,4 @@
+// Michael Ewing - MYps - create a minimal version of ps command
 // library imports
 #include <fcntl.h>
 #include <stdio.h>
@@ -180,7 +181,8 @@ int find_valid_pids (char *charPID) {
 
     // Error checking for opening files
     if(f == NULL || uidInfo == NULL) {
-        printf("Error opening file(s).\n");
+        perror (NULL);
+        exit (EXIT_FAILURE);
     }
 
     // scan given file while there is content
@@ -213,7 +215,8 @@ void printUtime(int pid) {
 
     // Error checking for opening files
     if (f == NULL) {
-        printf("Error opening file(s).\n");
+        perror (NULL);
+        exit (EXIT_FAILURE);
     }
 
     // scan given file while there is content
@@ -251,7 +254,8 @@ void printStime(int pid) {
 
     // Error checking for opening files
     if (f == NULL) {
-        printf("Error opening file(s).\n");
+        perror (NULL);
+        exit (EXIT_FAILURE);
     }
 
     // scan given file while there is content
@@ -297,7 +301,7 @@ void print_cmdline(int pid) {
     // indicate a null byte at the end of the argument line
     arg_list[length] = '\0';
 
-    printf("cmdline: ");
+    printf("cmdline: [ ");
     // loop over arguments. argu are separated by NULs
     next_arg = arg_list;
     while(next_arg < arg_list + length) {
@@ -306,6 +310,7 @@ void print_cmdline(int pid) {
         // advance to the next argument
         next_arg += strlen(next_arg) + 1;
     }
+    printf("]");
 }
 
 // function to print state
@@ -317,7 +322,8 @@ void printStat(int pid) {
 
     // Error checking for opening files
     if (f == NULL) {
-        printf("Error opening file(s).\n");
+        perror (NULL);
+        exit (EXIT_FAILURE);
     }
 
     // acquire state from proc file
@@ -340,7 +346,8 @@ void printSize(int pid) {
 
     // Error checking for opening files
     if (f == NULL) {
-        printf("Error opening file(s).\n");
+        perror (NULL);
+        exit (EXIT_FAILURE);
     }
 
     // acquire size from proc file
