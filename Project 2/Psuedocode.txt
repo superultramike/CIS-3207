@@ -2,6 +2,8 @@
 2: Implement tokenizer to return user input as white-space delimited tokens
 3: implement some of the easier built in commands
 4: implement a basic parser that will run built-ins with given number of arguments
+  // Function to execute builtin commands
+  int ownCmdHandler(char** parsed)
   4.1: alert user if they enter an invalid number of arguments for a built in command
   
 5: Finish the rest of the built-in commands and make sure they work
