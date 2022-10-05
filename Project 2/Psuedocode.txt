@@ -5,6 +5,7 @@
   // Function to execute builtin commands
   int ownCmdHandler(char** parsed)
   4.1: alert user if they enter an invalid number of arguments for a built in command
+BUILT IN COMMANDS SHOULD NEVER USE EXEC
   
 5: Finish the rest of the built-in commands and make sure they work
 6: start by implementing fork() when command isn't built in
