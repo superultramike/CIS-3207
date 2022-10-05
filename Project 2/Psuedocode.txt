@@ -1,14 +1,111 @@
-1: Start figuring out how to get user input one line at a time (hint: getline)
-2: Implement tokenizer to return user input as white-space delimited tokens
-3: implement some of the easier built in commands
-4: implement a basic parser that will run built-ins with given number of arguments
+Import C libraries here
+
+Import function prototypes here
+
+// Main
+int main(argc, argv[], *maybe put environment var pointer here*) {
+    while(always true so it constantly runs) {
+        print beginning terminal tag
+        declare char *pointer to store value of reading a line (function read_line)
+        declare char **pointer to store array of values/arguments for a line (function split_line)
+        
+        if there is something present in the char**pointer {
+            then there is a command to execute by running (function exec) and using the tokens as function input 
+        }
+        
+        free char *pointer above
+        free char **pointer above
+    }
+}
+
+// Function to read a line
+char* read_line() {
+    declare a char* pointer of the line we will read (NULL)
+    declare a buflen of zero since we don't know how long the line will be
+    run getline function that intakes
+        the address of line, the address of buflen, and that it's a stdin
+    finally return the entire line back to function
+}
+
+// Function to split line into arguments
+char** split_line(intake the line we just read) {
+    declare int length so that we use it later with tokens
+    declare int capacity so that we restrict the amount of arguments that can be processed in a single line
+    declare char **tokens to equal the length of a given line multipled by the argument capacity (above)
+    
+    declare char *delimiters so that we know when we are looking at the next token ( \t\r\n)
+    declare char *token that equals strtok with inputs of the line and the delimiters
+    
+    while(we still have tokens to read) {
+        token"s" with an array value of length (setup above) will equal the new token (aka we are looking at the first token)
+        increment length (so that we know which token we are looking at)
+        
+        if(the # of tokens (length) is greater than or equal to capacity) {
+            then reassign capacity to a higher value (of about 1.5 times more)
+            reassign tokens to realloc more memory that intakes (tokens, capacity * sizeof(char*))
+        }
+        
+        reassign token to strtok(NULL, delimiters)
+    }
+    
+    reassign the last token with value NULL
+    return tokens
+}
+
+// Function to execute process
+void exec(char **args) {
+    declare child_pid to equal a fork()
+    
+    if the child_pid is zero (aka it's a child process) {
+        execute a process using the first argument and args
+        declare a perror incase the execution fails
+        exit(1) aka failure
+    }
+    else if (the child_pid is greater than 0 then it's a parent process) {
+        declare a status integer
+        do this action {
+            waitpid for the child process to execute then change the statusid
+        } while we wait for the status to change
+    }
+    else {
+        declare a perror incase all else fails
+    }
+}
+
+// Function to execute built-in command exit
+void exit(char **args) {
+    exit(0) function was a success
+}
+
+// Function to execute built-in command cd
+void cd(char **args) {
+    if(no directory was given in args[1]) {
+        print out an error saying that there's a missing argument
+    }
+    else {
+        if(change if the 2nd argument of chdir isn't 0 then we don't have a directory to switch to) {
+            print out an error 
+        }
+    }
+}
+
+// Function to execute built-in command cd
+void help(char **args) {
+    declare char *help to display all text
+        include the name of the shell and all the possible arguments the user can use
+    printf the char *help to the screen
+}
+
+DONE Start figuring out how to get user input one line at a time (hint: getline)
+DONE Implement tokenizer to return user input as white-space delimited tokens
+DONE implement some of the easier built in commands
+PROGRESS implement a basic parser that will run built-ins with given number of arguments
   // Function to execute builtin commands
   int ownCmdHandler(char** parsed)
   4.1: alert user if they enter an invalid number of arguments for a built in command
-BUILT IN COMMANDS SHOULD NEVER USE EXEC
   
-5: Finish the rest of the built-in commands and make sure they work
-6: start by implementing fork() when command isn't built in
-7: then implement exec() and wait() once you've figured out fork
-8: then shell can execute both built-ins and external commands
-9: it will be easier to implement flag handling once core shell is programmed
+HAVEN'T STARTED Finish the rest of the built-in commands and make sure they work
+HAVEN'T STARTED start by implementing fork() when command isn't built in
+HAVEN'T STARTED then implement exec() and wait() once you've figured out fork
+HAVEN'T STARTED then shell can execute both built-ins and external commands
+HAVEN'T STARTED it will be easier to implement flag handling once core shell is programmed
