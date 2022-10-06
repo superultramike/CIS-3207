@@ -32,6 +32,43 @@ int main(argc, argv[], *maybe put environment var pointer here*) {
         invalid # of arguments
     }
 }
+& always has to work
+mutually exclusive pipe and redirection
+
+int main(argc argv) {
+    if argc == 2
+        batch()
+    else
+        interactive()
+}
+
+batch() {
+    while lines in file
+        call line parser
+    at EOF
+        exit()
+}
+
+interactive() {
+    while(1)
+        getline(user)
+        call line parser(line)
+}
+
+lineparse() {
+    flag[]
+    parse through line to setup state of execution
+    call strcmp and see if it's a builtin
+        If it is a builtin
+            run command handler
+        else
+            runs exece cause it's not a built-in
+    flags present in here
+    
+    (make decisions about state)!
+}
+
+
 
 // Function to process a string
 int processString(intake entire string, the parased arguments, and the parsed arguments that are piped) {
