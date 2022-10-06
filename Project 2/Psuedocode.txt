@@ -4,17 +4,88 @@ Import function prototypes here
 
 // Main
 int main(argc, argv[], *maybe put environment var pointer here*) {
-    while(always true so it constantly runs) {
-        print beginning terminal tag
-        declare char *pointer to store value of reading a line (function read_line)
-        declare char **pointer to store array of values/arguments for a line (function split_line)
-        
-        if there is something present in the char**pointer {
-            then there is a command to execute by running (function exec) and using the tokens as function input 
+    declare a flag to determine what we want future execution to be (execFlag)
+    
+    // if only one argument is provided then we are in interactive mode
+    if(argc == 1) {
+        while(always true so it constantly runs) {
+            print beginning terminal tag
+
+            declare char *pointer to store value of reading a line (function read_line)
+            declare char **pointer to store array of values/arguments for a line (function split_line)
+
+            declare execFlag equal to processString function which will return an integer
+            of what mode of input you are receiving
+
+            // if execFlag equals 0 then there is no command or a built-in command
+            // if execFlag equals 1 then there is a simple command (that doesn't require a pipe)
+            // if execFlag equals 2 then there is a command that involves a pipe 
+
+            free char *pointer above
+            free char **pointer above
         }
-        
-        free char *pointer above
-        free char **pointer above
+    }
+    else if(argc == 2) {
+        // we are in batch mode
+    }
+    else {
+        invalid # of arguments
+    }
+}
+
+// Function to process a string
+int processString(intake entire string, the parased arguments, and the parsed arguments that are piped) {
+    declare char* with a length of 2
+    declare an integer as 0 of whether there is a pipe present
+    
+    declare above integer equal to parsePipe command (this function will see if there is a pipe present)
+    
+    if(piped is true) {
+        then run the parseSpace function using the left side of the argument
+        then run the parseSpace function using the right side of the argument
+    }
+    else {
+        then run the parseSpace function using the full string and the char* string pipe
+    }
+    
+    // commandHandler function returns true (which means there's possible execution)
+    if(commandHandler(paresed)) {
+        return 0 // there is no command or a built-in command
+    }
+    else {
+        return 1 + piped // there is a simple command or a command that involves a pipe
+    }
+}
+
+// Function to parse a string of commands to find a pipe
+int parseCommandPipe(char* strings, char** strings that could be piped) {
+    // for loop that goes through each side of commands to see if pipe is present
+    for(i=0; i<2; i++) {
+        reassign the strings that could be piped to strsep that intakes the string and char "|"
+        if(strpiped is NULL) {
+            then break out because we may have found a pipe
+        }
+    }
+    
+    if (the first element of strpiped is null) {
+        then we return 0 cause no pipes were found
+    }
+    else {
+        then we return 1 cause a pipe was found
+    }
+}
+
+// Function to parse command words
+void parseCommandWords(char* str, char** paresedStrings) {
+    // for loop that removes the space if a pipe is present in general string
+    for(int i=0; i<capacity; i++) {
+        parsedStrings[i] = strsep // seperate the space from the side of the pipe string
+        // if (paresedString[i] == NULL) {
+            break
+        }
+        if (the length of parsedString is equal to 0) {
+            then we decrement i to find again that space
+        }
     }
 }
 
@@ -96,14 +167,36 @@ void help(char **args) {
     printf the char *help to the screen
 }
 
-DONE Start figuring out how to get user input one line at a time (hint: getline)
-DONE Implement tokenizer to return user input as white-space delimited tokens
-DONE implement some of the easier built in commands
-PROGRESS implement a basic parser that will run built-ins with given number of arguments
-  // Function to execute builtin commands
-  int ownCmdHandler(char** parsed)
-  4.1: alert user if they enter an invalid number of arguments for a built in command
-  
+// Function to execute builtin commands
+int commandHandler(char** parsedStrings) {
+    declare # of built in commands present in shell
+    declare a char array of list of own commands
+    declare a char array for username
+    
+    initalize each built in command like so
+    ListOfBuiltInCommands[0] = "help";
+    ListOfBuiltInCommands[0] = "cd";
+    
+    // make a for loop that determines which command the user wants
+    for(int i=0; i< # of commands; i++) {
+        if(the first parsed string and the specific list of built of commands is equal) {
+            then increment the counter for later switch cases use
+        }
+    }
+    
+    // HAVE A CASE PRESENT FOR EACH BUILT IN COMMANDS THAT RELATES TO THE ARRAY ABOVE
+    switch(counter from above) {
+        case 1 to n:
+            printf("Executing command");
+        default:
+            break;
+    }
+    return 0;
+}
+
+// put in rest of built in commands
+// put in redirection
+// put piped system commands
 HAVEN'T STARTED Finish the rest of the built-in commands and make sure they work
 HAVEN'T STARTED start by implementing fork() when command isn't built in
 HAVEN'T STARTED then implement exec() and wait() once you've figured out fork
