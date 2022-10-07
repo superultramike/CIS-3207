@@ -220,3 +220,13 @@ void path(char **args) {
         using given arguments, reassign current shell path to new argument path
     }
 }
+
+TEST PLAN
+In terms of a test plan, I want to slowly implement each section of this shell piece by piece
+rather then implementing a batch of functions and then debugging for weeks on end. In the context
+of specific test cases, I want to include cases like a background process in a strange place like
+cmd1 | cmd2 | cmd3 & or cmd1 & cmd2 & and see what output my shell will produce. Some other test cases
+may also be cases that have intentional mistakes in them like cmd1 | > cmd2 (this case can't exist because
+given the case that piping and redirection can't exist in the same test case, thankfully phew!). Additionally,
+all built in commands will be easy to test given the less variablty of what the user can input (besides cd and dir
+but those two commands have already been extensively coded in previous assignments so it shouldn't be too hard).
