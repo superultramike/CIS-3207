@@ -49,6 +49,7 @@ lineparse() {
         read using getline()
             add NULL '\n' token at the end of user line
             tokenize using whitespace and other delimters as main tokens
+            
         convert it to array of strings
         call strcmp and see if it's a builtin or special characters
             '|', '&', '>', '>>', '<'
