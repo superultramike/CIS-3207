@@ -108,10 +108,6 @@ void batch(char *filename) {
 
     file = fopen(filename, "rb");
 
-    if (file == NULL) {
-        exit(EXIT_FAILURE);
-    }
-
     while((read = getline(&line, &len, file)) != -1) {
         lineParse(line);
     }
@@ -130,13 +126,23 @@ void batch(char *filename) {
 // ------------------------------------------------------------------------------------------
 // Function to execute shell in interactive mode
 void interactive() {
-    printf("We are in interactive mode\n");
+    char *line = NULL;
+    size_t len = 0;
+    size_t read;
+
+    while(1) {
+        printf("> ");
+        while((read = getline(&line, &len, stdin)) != 1) {
+            lineParse(line);
+            printf("> ");
+        }
+    }
 }
 
 // ------------------------------------------------------------------------------------------
 // Main function
 // ------------------------------------------------------------------------------------------
-int main(int argc, char *argv[], char *envp[]) {
+int main(int argc, char *argv[]) {
     // if only 1 argument go to interactive mode
     if(argc == 1) {
         interactive();

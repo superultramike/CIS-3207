@@ -9,30 +9,16 @@
 // ------------------------------------------------------------------------------------------
 // Function Prototypes
 // ------------------------------------------------------------------------------------------
-void lineParse(char *line);
+char** lineParse(char *line);
+void execution_time(char **args);
 
 // ------------------------------------------------------------------------------------------
 // Built in Commands (cd, clr, dir, environ, echo, help, pause, quit, exit)
 // Functions that need to finished: cd, dir, environ, echo
 // ------------------------------------------------------------------------------------------
 // Function to execute built-in command quit
-void shell_quit() {
+void shell_quit(char **args) {
     exit(0);
-}
-
-// Function to execute built-in command exit
-void shell_exit() {
-    exit(0);
-}
-
-// Function to execute built-in command clr
-void shell_clr() {
-    printf("\e[1;1H\e[2J");
-}
-
-// Function to execute built-in command help
-void shell_help() {
-    printf("Welcome to the help function\n");
 }
 
 // Function to execute built-in command pause
@@ -42,9 +28,24 @@ void shell_pause(char **args) {
     getchar();
 }
 
+// Function to execute built-in command help
+void shell_help(char **args) {
+    printf("Welcome to the help function\n");
+}
+
+// Function to execute built-in command exit
+void shell_exit(char **args) {
+    exit(0);
+}
+
+// Function to execute built-in command clr
+void shell_clr(char **args) {
+    printf("\e[1;1H\e[2J");
+}
+
 struct builtin {
     char *name;
-    void (*func)();
+    void (*func)(char **args);
 };
 
 struct builtin builtins[] = {
@@ -63,26 +64,17 @@ int num_builtins() {
 // Input launcher
 // ------------------------------------------------------------------------------------------
 // Function to parse lines
-void lineParse(char *line) {
+char** lineParse(char *line) {
     int length = 0;
     int cap = 16;
     char **tokens = malloc(cap * sizeof(char*));
-    char a[cap][10];
 
     char *delimiters = " \t\r\n";
     char *token = strtok(line, delimiters);
 
     // THIS RUNS FOR EACH INDIVIDUAL TOKEN
     while(token != NULL) {
-        strcpy(a[length], token);
         tokens[length] = token;
-
-        // Check each individual token and see if it's a builtin
-        for(int i=0; i<num_builtins(); i++) {
-            if(strcmp(a[length], builtins[i].name) == 0) {
-                builtins[i].func();
-            }
-        }
 
         length++;
         if(length >= cap) {
@@ -93,10 +85,11 @@ void lineParse(char *line) {
         token = strtok(NULL, delimiters);
     }
     tokens[length] = NULL;
+    return tokens;
 }
 
 // ------------------------------------------------------------------------------------------
-// Batch "main" function
+// Batch "main" function - NOT WORKING
 // ------------------------------------------------------------------------------------------
 // Function to execute shell in batch mode
 void batch(char *filename) {
@@ -108,12 +101,9 @@ void batch(char *filename) {
 
     file = fopen(filename, "rb");
 
-    if (file == NULL) {
-        exit(EXIT_FAILURE);
-    }
-
     while((read = getline(&line, &len, file)) != -1) {
-        lineParse(line);
+        char **tokens = lineParse(line);
+        execution_time(tokens);
     }
 
     fclose(file);
@@ -130,13 +120,33 @@ void batch(char *filename) {
 // ------------------------------------------------------------------------------------------
 // Function to execute shell in interactive mode
 void interactive() {
-    printf("We are in interactive mode\n");
+    char *line = NULL;
+    size_t len = 0;
+    size_t read;
+
+    while(1) {
+        printf("> ");
+        while((read = getline(&line, &len, stdin)) != 1) {
+            char **tokens = lineParse(line);
+            execution_time(tokens);
+            printf("> ");
+        }
+    }
+}
+
+void execution_time(char **args) {
+    for (int i = 0; i < num_builtins(); i++) {
+        if (strcmp(args[0], builtins[i].name) == 0) {
+            builtins[i].func(args);
+            return;
+        }
+    }
 }
 
 // ------------------------------------------------------------------------------------------
 // Main function
 // ------------------------------------------------------------------------------------------
-int main(int argc, char *argv[], char *envp[]) {
+int main(int argc, char *argv[]) {
     // if only 1 argument go to interactive mode
     if(argc == 1) {
         interactive();
