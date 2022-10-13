@@ -20,6 +20,9 @@ void execution_time(char **args);
 // ------------------------------------------------------------------------------------------
 // Built in Commands (cd, clr, dir, environ, echo, help, pause, quit, exit)
 // Functions that need to finished: cd, dir
+// relative path (from current working directory) ./
+// full path - call perror
+// if they didn't send, print cwd
 // ------------------------------------------------------------------------------------------
 // Function to quit the shell (same as exit)
 void shell_quit(char **args) {
@@ -128,7 +131,7 @@ char** lineParse(char *line) {
 }
 
 // ------------------------------------------------------------------------------------------
-// Batch "main" function - NOT WORKING
+// Batch "main" function
 // ------------------------------------------------------------------------------------------
 // Function to execute shell in batch mode
 void batch(char *filename) {
@@ -173,6 +176,8 @@ void interactive() {
     }
 }
 
+// put redirect flags in here
+// while there is still programs to execute keep going
 void execution_time(char **args) {
     for (int i = 0; i < num_builtins(); i++) {
         if (strcmp(args[0], builtins[i].name) == 0) {
@@ -180,6 +185,10 @@ void execution_time(char **args) {
             return;
         }
     }
+    // while there is another program to run
+    // keep searching for flags
+
+    // if redirect and pipe flags are present then run error
 }
 
 // ------------------------------------------------------------------------------------------
