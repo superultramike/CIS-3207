@@ -1,10 +1,15 @@
 // ------------------------------------------------------------------------------------------
 // Program Imports
 // ------------------------------------------------------------------------------------------
+#include <errno.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/wait.h>
 #include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 // ------------------------------------------------------------------------------------------
 // Global Variables
@@ -51,6 +56,7 @@ void shell_clr(char **args) {
     printf("\e[1;1H\e[2J");
 }
 
+/*
 // Is this working?
 void shell_cd(char **args) {
     if(args[1] == NULL) {
@@ -62,6 +68,7 @@ void shell_cd(char **args) {
         }
     }
 }
+*/
 
 // Function to repeat user input after 'echo'
 void shell_echo(char **args) {
@@ -93,7 +100,7 @@ struct builtin builtins[] = {
     {"help", shell_help},
     {"exit", shell_exit},
     {"clr", shell_clr},
-    {"cd", shell_cd},
+    //{"cd", shell_cd},
     {"echo", shell_echo},
     {"environ", shell_environ}
 };
@@ -128,6 +135,84 @@ char** lineParse(char *line) {
     }
     tokens[length] = NULL;
     return tokens;
+}
+
+// put redirect flags in here
+// while there is still programs to execute keep going
+void execution_time(char **args) {
+    for (int i = 0; i < num_builtins(); i++) {
+        if (strcmp(args[0], builtins[i].name) == 0) {
+            builtins[i].func(args);
+            return;
+        }
+    }
+
+    // while there is another program to run, keep searching for possible special cases
+    // flags are all stored in here!!!!!!!!!!
+    // if redirect and pipe flags are present then run error
+    int redirectIn = 0;
+    int redirectOut = 0;
+    int j = 0;
+    while(args[j] != NULL) {
+        //printf("%s\n", args[j]);
+        if(strcmp(args[j], "<") == 0) {
+            //printf("FOUND IT\n");
+            redirectIn = 1;
+        }
+        if(strcmp(args[j], ">") == 0) {
+            //printf("FOUND IT\n");
+            redirectOut = 1;
+        }
+        j++;
+    }
+
+    // child process
+    int pid = fork();
+
+    if((pid = fork()) < 0) {
+        perror("shell");
+    }
+    else if (pid == 0) {
+        // >
+        if(redirectIn == 1) {
+            int in = open(input, O_RDONLY);
+            dup2(in, 0);
+            close(in);
+        }
+        // >
+        if(redirectOut == 1) {
+            int fd = open(args[j - 2], O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU, S_IRWXO);
+            int sout = dup(1);
+            dup2(fd, 1);
+            execvp(args[0], j);
+            dup2()
+        }
+        execvp(args[0], args);
+    }
+    else if(pid > 0) {
+        int status;
+        do {
+            waitpid(pid, &status, WUNTRACED);
+        } while(!WIFEXITED(status) && !WIFSIGNALED(status));
+    }
+    else {
+        perror("shell");
+    }
+    /*
+    if(child_pid == 0) {
+        execvp(args[0], args);
+        perror("shell");
+        exit(1);
+    }
+    else if(child_pid > 0) {
+        int status;
+        do {
+            waitpid(child_pid, &status, WUNTRACED);
+        } while(!WIFEXITED(status) && !WIFSIGNALED(status));
+    } else {
+        perror("shell");
+    }
+    */
 }
 
 // ------------------------------------------------------------------------------------------
@@ -174,21 +259,6 @@ void interactive() {
             printf("> ");
         }
     }
-}
-
-// put redirect flags in here
-// while there is still programs to execute keep going
-void execution_time(char **args) {
-    for (int i = 0; i < num_builtins(); i++) {
-        if (strcmp(args[0], builtins[i].name) == 0) {
-            builtins[i].func(args);
-            return;
-        }
-    }
-    // while there is another program to run
-    // keep searching for flags
-
-    // if redirect and pipe flags are present then run error
 }
 
 // ------------------------------------------------------------------------------------------
