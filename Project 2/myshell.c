@@ -1,10 +1,15 @@
 // ------------------------------------------------------------------------------------------
 // Program Imports
 // ------------------------------------------------------------------------------------------
+#include <errno.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/wait.h>
 #include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 // ------------------------------------------------------------------------------------------
 // Global Variables
@@ -51,6 +56,7 @@ void shell_clr(char **args) {
     printf("\e[1;1H\e[2J");
 }
 
+/*
 // Is this working?
 void shell_cd(char **args) {
     if(args[1] == NULL) {
@@ -62,6 +68,7 @@ void shell_cd(char **args) {
         }
     }
 }
+*/
 
 // Function to repeat user input after 'echo'
 void shell_echo(char **args) {
@@ -73,14 +80,13 @@ void shell_echo(char **args) {
 }
 
 // Function to print all environ variables
-void shell_environ() {
+void shell_environ(char **args) {
     char **s = environ;
 
     for(; *s; s++) {
         printf("%s\n", *s);
     }
 }
-
 
 struct builtin {
     char *name;
@@ -93,7 +99,7 @@ struct builtin builtins[] = {
     {"help", shell_help},
     {"exit", shell_exit},
     {"clr", shell_clr},
-    {"cd", shell_cd},
+    //{"cd", shell_cd},
     {"echo", shell_echo},
     {"environ", shell_environ}
 };
@@ -128,6 +134,90 @@ char** lineParse(char *line) {
     }
     tokens[length] = NULL;
     return tokens;
+}
+
+// put redirect flags in here
+// while there is still programs to execute keep going
+void execution_time(char **args) {
+    for (int i = 0; i < num_builtins(); i++) {
+        if (strcmp(args[0], builtins[i].name) == 0) {
+            builtins[i].func(args);
+            return;
+        }
+    }
+
+    // while there is another program to run, keep searching for possible special cases
+    // flags are all stored in here!!!!!!!!!!
+    // if redirect and pipe flags are present then run error
+    int redirectIn = 0;
+    int redirectOut = 0;
+    int append = 0;
+    int count = 0;
+    while(args[count] != NULL) {
+        //printf("args[%d] = %s\n", count, args[count]);
+        // redirectOut >
+        if(strcmp(args[count], ">") == 0) {
+            //printf("FOUND IT\n");
+            redirectOut = 1;
+        }
+        // redirectIn <
+        if(strcmp(args[count], "<") == 0) {
+            //printf("FOUND IT\n");
+            redirectIn = 1;
+        }
+        // append >>
+        if(strcmp(args[count], ">>") == 0) {
+            //printf("FOUND IT\n");
+            append = 1;
+        }
+        count++;
+    }
+    //printf("Count = %d\n", count);
+
+    int pid = fork();
+
+    if(pid == 0) {
+        // works
+        // ls > foo.txt
+        // open foo.txt, duplicate opened filefd, execute using the first arg, then close
+        if(redirectOut == 1) {
+            int filefd = open(args[count-1], O_WRONLY|O_CREAT, 0666);
+            close(1);//Close stdout
+            dup(filefd);
+            execlp(args[0], args[0], NULL);
+            close(filefd);
+        }
+        // < should be implemented to redirect Input, read from a file
+        // grep "Romeo" < skakespeare.txt
+        // progress
+        // grep foo < foo.txt
+        if(redirectIn == 1) {
+            int filefd = open(args[count-1], O_RDONLY);
+            //close(1);//Close stdout
+            dup2(filefd,0);
+            close(filefd);
+            execvp(args[1], args);
+        }
+        // works
+        // ls >> foo.txt
+        if(append == 1) {
+            int filefd = open(args[count-1], O_CREAT | O_WRONLY | O_APPEND, 0666);
+            close(1);
+            dup(filefd);
+            execlp(args[0], args[0], NULL);
+            close(filefd);
+        }
+        execvp(args[0], args);
+        perror("shell");
+        exit(1);
+    } else if(pid > 0){
+        int status;
+        do {
+            waitpid(pid, &status, WUNTRACED);
+        } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+    } else {
+        perror("shell");
+    }
 }
 
 // ------------------------------------------------------------------------------------------
@@ -174,21 +264,6 @@ void interactive() {
             printf("> ");
         }
     }
-}
-
-// put redirect flags in here
-// while there is still programs to execute keep going
-void execution_time(char **args) {
-    for (int i = 0; i < num_builtins(); i++) {
-        if (strcmp(args[0], builtins[i].name) == 0) {
-            builtins[i].func(args);
-            return;
-        }
-    }
-    // while there is another program to run
-    // keep searching for flags
-
-    // if redirect and pipe flags are present then run error
 }
 
 // ------------------------------------------------------------------------------------------

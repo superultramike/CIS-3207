@@ -10,21 +10,23 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <dirent.h>
 
 // ------------------------------------------------------------------------------------------
 // Global Variables
 // ------------------------------------------------------------------------------------------
 extern char **environ;
-
+char starterPath[100];
 // ------------------------------------------------------------------------------------------
 // Function Prototypes
 // ------------------------------------------------------------------------------------------
 char** lineParse(char *line);
 void execution_time(char **args);
+void listFiles(char* dirname);
 
 // ------------------------------------------------------------------------------------------
 // Built in Commands (cd, clr, dir, environ, echo, help, pause, quit, exit)
-// Functions that need to finished: cd, dir
+// Functions that need to finished: cd
 // relative path (from current working directory) ./
 // full path - call perror
 // if they didn't send, print cwd
@@ -56,19 +58,53 @@ void shell_clr(char **args) {
     printf("\e[1;1H\e[2J");
 }
 
-/*
-// Is this working?
-void shell_cd(char **args) {
+// Function to print all contents (including subdirectories)
+// of the current or specified directory
+void shell_dir(char **args) {
+    // 0 arguments to print contents of current directory
+    // dir ./Test
     if(args[1] == NULL) {
-        fprintf(stderr, "cd: missing argument\n");
+        listFiles(".");
     }
-    else {
-        if(chdir(args[1]) != 0) {
-            perror("shell: cd");
-        }
+    // 1 arguments to print contents of specified directory
+    // dir /home/michael/Downloads
+    if(args[1] != NULL) {
+        listFiles(args[1]);
+    }
+
+    // If there is something present after the path name then return error
+    if(args[2] != NULL) {
+        printf("dir: cannot open directory\n");
+        exit(1);
     }
 }
-*/
+
+// helper function to recursively prints the files
+// and directory contents of a current/given directory
+void listFiles(char* dirname) {
+    DIR* dir = opendir(dirname);
+
+    if(dir == NULL) {
+        return;
+    }
+    printf("Reading files in: %s\n", dirname);
+
+    struct dirent* entity;
+
+    entity = readdir(dir);
+    while(entity != NULL) {
+        printf("%s/%s\n", dirname, entity->d_name);
+        if(entity->d_type == DT_DIR && strcmp(entity->d_name, ".") != 0 && strcmp(entity->d_name, "..") != 0) {
+            char path[1000] = {0};
+            strcat(path, dirname);
+            strcat(path, "/");
+            strcat(path, entity->d_name);
+            listFiles(path);
+        }
+        entity = readdir(dir);
+    }
+    closedir(dir);
+}
 
 // Function to repeat user input after 'echo'
 void shell_echo(char **args) {
@@ -80,7 +116,7 @@ void shell_echo(char **args) {
 }
 
 // Function to print all environ variables
-void shell_environ() {
+void shell_environ(char **args) {
     char **s = environ;
 
     for(; *s; s++) {
@@ -88,6 +124,18 @@ void shell_environ() {
     }
 }
 
+// Is this working?
+void shell_cd(char **args) {
+    if(args[1] == NULL) {
+        printf("CWD: %s\n", starterPath);
+    }
+    else if(args[1] != NULL) {
+        //char addedPath[100];
+        strcat(starterPath, "/");
+        strcat(starterPath, args[1]);
+        printf("New Path: %s\n", starterPath);
+    }
+}
 
 struct builtin {
     char *name;
@@ -100,7 +148,9 @@ struct builtin builtins[] = {
     {"help", shell_help},
     {"exit", shell_exit},
     {"clr", shell_clr},
-    //{"cd", shell_cd},
+    {"clear", shell_clr},
+    {"cd", shell_cd},
+    {"dir", shell_dir},
     {"echo", shell_echo},
     {"environ", shell_environ}
 };
@@ -152,67 +202,73 @@ void execution_time(char **args) {
     // if redirect and pipe flags are present then run error
     int redirectIn = 0;
     int redirectOut = 0;
-    int j = 0;
-    while(args[j] != NULL) {
-        //printf("%s\n", args[j]);
-        if(strcmp(args[j], "<") == 0) {
-            //printf("FOUND IT\n");
-            redirectIn = 1;
-        }
-        if(strcmp(args[j], ">") == 0) {
+    int append = 0;
+    int count = 0;
+    while(args[count] != NULL) {
+        //printf("args[%d] = %s\n", count, args[count]);
+        // redirectOut >
+        if(strcmp(args[count], ">") == 0) {
             //printf("FOUND IT\n");
             redirectOut = 1;
         }
-        j++;
+        // redirectIn <
+        if(strcmp(args[count], "<") == 0) {
+            //printf("FOUND IT\n");
+            redirectIn = 1;
+        }
+        // append >>
+        if(strcmp(args[count], ">>") == 0) {
+            //printf("FOUND IT\n");
+            append = 1;
+        }
+        count++;
     }
+    //printf("Count = %d\n", count);
 
-    // child process
     int pid = fork();
 
-    if((pid = fork()) < 0) {
-        perror("shell");
-    }
-    else if (pid == 0) {
-        // >
-        if(redirectIn == 1) {
-            int in = open(input, O_RDONLY);
-            dup2(in, 0);
-            close(in);
-        }
-        // >
+    if(pid == 0) {
+        // works
+        // ls > foo.txt
+        // open foo.txt, duplicate opened filefd, execute using the first arg, then close
         if(redirectOut == 1) {
-            int fd = open(args[j - 2], O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU, S_IRWXO);
-            int sout = dup(1);
-            dup2(fd, 1);
-            execvp(args[0], j);
-            dup2()
+            int filefd = open(args[count-1], O_WRONLY|O_CREAT, 0666);
+            close(1);//Close stdout
+            dup(filefd);
+            execlp(args[0], args[0], NULL);
+            close(filefd);
         }
-        execvp(args[0], args);
-    }
-    else if(pid > 0) {
-        int status;
-        do {
-            waitpid(pid, &status, WUNTRACED);
-        } while(!WIFEXITED(status) && !WIFSIGNALED(status));
-    }
-    else {
-        perror("shell");
-    }
-    /*
-    if(child_pid == 0) {
+        // < should be implemented to redirect Input, read from a file
+        // grep "Romeo" < skakespeare.txt
+        // progress
+        // grep foo < foo.txt
+        if(redirectIn == 1) {
+            int filefd = open(args[count-1], O_RDONLY);
+            //close(1);//Close stdout
+            dup2(filefd,0);
+            close(filefd);
+            execvp(args[1], args);
+        }
+        // works
+        // ls >> foo.txt
+        if(append == 1) {
+            int filefd = open(args[count-1], O_CREAT | O_WRONLY | O_APPEND, 0666);
+            close(1);
+            dup(filefd);
+            execlp(args[0], args[0], NULL);
+            close(filefd);
+        }
         execvp(args[0], args);
         perror("shell");
         exit(1);
-    }
-    else if(child_pid > 0) {
+    } else if(pid > 0){
         int status;
         do {
-            waitpid(child_pid, &status, WUNTRACED);
-        } while(!WIFEXITED(status) && !WIFSIGNALED(status));
+            waitpid(pid, &status, WUNTRACED);
+        } while (!WIFEXITED(status) && !WIFSIGNALED(status));
     } else {
         perror("shell");
     }
-    */
 }
 
 // ------------------------------------------------------------------------------------------
@@ -250,13 +306,14 @@ void interactive() {
     char *line = NULL;
     size_t len = 0;
     size_t read;
+    getcwd(starterPath, 100);
 
     while(1) {
-        printf("> ");
+        printf("%s/myshell> ", starterPath);
         while((read = getline(&line, &len, stdin)) != 1) {
             char **tokens = lineParse(line);
             execution_time(tokens);
-            printf("> ");
+            printf("%s/myshell> ", starterPath);
         }
     }
 }
