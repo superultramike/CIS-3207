@@ -238,16 +238,14 @@ void execution_time(char **args) {
             execlp(args[0], args[0], NULL);
             close(filefd);
         }
-        // < should be implemented to redirect Input, read from a file
-        // grep "Romeo" < skakespeare.txt
-        // progress
-        // grep foo < foo.txt
+        // works BUT weird print out error at the beginning
+        // grep Romeo < skakespeare.txt
         if(redirectIn == 1) {
-            int filefd = open(args[count-1], O_RDONLY);
-            //close(1);//Close stdout
-            dup2(filefd,0);
-            close(filefd);
-            execvp(args[1], args);
+            int fd = open(args[count-1], O_RDONLY);
+            int sin = dup(0);
+            dup2(fd, 0);
+            dup2(sin,0);
+            close(fd);
         }
         // works
         // ls >> foo.txt
