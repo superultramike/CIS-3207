@@ -10,21 +10,23 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <dirent.h>
 
 // ------------------------------------------------------------------------------------------
 // Global Variables
 // ------------------------------------------------------------------------------------------
 extern char **environ;
-
+char starterPath[100];
 // ------------------------------------------------------------------------------------------
 // Function Prototypes
 // ------------------------------------------------------------------------------------------
 char** lineParse(char *line);
 void execution_time(char **args);
+void listFiles(char* dirname);
 
 // ------------------------------------------------------------------------------------------
 // Built in Commands (cd, clr, dir, environ, echo, help, pause, quit, exit)
-// Functions that need to finished: cd, dir
+// Functions that need to finished: cd
 // relative path (from current working directory) ./
 // full path - call perror
 // if they didn't send, print cwd
@@ -56,19 +58,53 @@ void shell_clr(char **args) {
     printf("\e[1;1H\e[2J");
 }
 
-/*
-// Is this working?
-void shell_cd(char **args) {
+// Function to print all contents (including subdirectories)
+// of the current or specified directory
+void shell_dir(char **args) {
+    // 0 arguments to print contents of current directory
+    // dir ./Test
     if(args[1] == NULL) {
-        fprintf(stderr, "cd: missing argument\n");
+        listFiles(".");
     }
-    else {
-        if(chdir(args[1]) != 0) {
-            perror("shell: cd");
-        }
+    // 1 arguments to print contents of specified directory
+    // dir /home/michael/Downloads
+    if(args[1] != NULL) {
+        listFiles(args[1]);
+    }
+
+    // If there is something present after the path name then return error
+    if(args[2] != NULL) {
+        printf("dir: cannot open directory\n");
+        exit(1);
     }
 }
-*/
+
+// helper function to recursively prints the files
+// and directory contents of a current/given directory
+void listFiles(char* dirname) {
+    DIR* dir = opendir(dirname);
+
+    if(dir == NULL) {
+        return;
+    }
+    printf("Reading files in: %s\n", dirname);
+
+    struct dirent* entity;
+
+    entity = readdir(dir);
+    while(entity != NULL) {
+        printf("%s/%s\n", dirname, entity->d_name);
+        if(entity->d_type == DT_DIR && strcmp(entity->d_name, ".") != 0 && strcmp(entity->d_name, "..") != 0) {
+            char path[1000] = {0};
+            strcat(path, dirname);
+            strcat(path, "/");
+            strcat(path, entity->d_name);
+            listFiles(path);
+        }
+        entity = readdir(dir);
+    }
+    closedir(dir);
+}
 
 // Function to repeat user input after 'echo'
 void shell_echo(char **args) {
@@ -88,6 +124,19 @@ void shell_environ(char **args) {
     }
 }
 
+// Is this working?
+void shell_cd(char **args) {
+    if(args[1] == NULL) {
+        printf("CWD: %s\n", starterPath);
+    }
+    else if(args[1] != NULL) {
+        //char addedPath[100];
+        strcat(starterPath, "/");
+        strcat(starterPath, args[1]);
+        printf("New Path: %s\n", starterPath);
+    }
+}
+
 struct builtin {
     char *name;
     void (*func)(char **args);
@@ -99,7 +148,9 @@ struct builtin builtins[] = {
     {"help", shell_help},
     {"exit", shell_exit},
     {"clr", shell_clr},
-    //{"cd", shell_cd},
+    {"clear", shell_clr},
+    {"cd", shell_cd},
+    {"dir", shell_dir},
     {"echo", shell_echo},
     {"environ", shell_environ}
 };
@@ -187,16 +238,14 @@ void execution_time(char **args) {
             execlp(args[0], args[0], NULL);
             close(filefd);
         }
-        // < should be implemented to redirect Input, read from a file
-        // grep "Romeo" < skakespeare.txt
-        // progress
-        // grep foo < foo.txt
+        // works BUT weird print out error at the beginning
+        // grep Romeo < skakespeare.txt
         if(redirectIn == 1) {
-            int filefd = open(args[count-1], O_RDONLY);
-            //close(1);//Close stdout
-            dup2(filefd,0);
-            close(filefd);
-            execvp(args[1], args);
+            int fd = open(args[count-1], O_RDONLY);
+            int sin = dup(0);
+            dup2(fd, 0);
+            dup2(sin,0);
+            close(fd);
         }
         // works
         // ls >> foo.txt
@@ -255,13 +304,14 @@ void interactive() {
     char *line = NULL;
     size_t len = 0;
     size_t read;
+    getcwd(starterPath, 100);
 
     while(1) {
-        printf("> ");
+        printf("%s/myshell> ", starterPath);
         while((read = getline(&line, &len, stdin)) != 1) {
             char **tokens = lineParse(line);
             execution_time(tokens);
-            printf("> ");
+            printf("%s/myshell> ", starterPath);
         }
     }
 }

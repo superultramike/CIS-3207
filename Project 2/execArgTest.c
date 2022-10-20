@@ -23,6 +23,7 @@ char currentWorkingDirectory[250];
 char** lineParse(char *line);
 void execArg(char **args);
 void listFiles(char* dirname);
+void execPipe(char **args);
 
 // ------------------------------------------------------------------------------------------
 // Input launcher
@@ -59,9 +60,9 @@ void execution_time(char **args) {
     int redirectOut = 0;
     int append = 0;
     int count = 0;
-
+    int pipeFlag = 1;
     while(args[count] != NULL) {
-        //printf("args[%d] = %s\n", count, args[count]);
+        printf("args[%d] = %s\n", count, args[count]);
         // redirectOut >
         if(strcmp(args[count], ">") == 0) {
             redirectOut = 1;
@@ -73,6 +74,10 @@ void execution_time(char **args) {
         // append >>
         else if(strcmp(args[count], ">>") == 0) {
             append = 1;
+        }
+        // pipe was found
+        else if(strcmp(args[count], "|") == 0) {
+            pipeFlag = 1;
         }
         // if quit is found
         else if(strcmp(args[count], "quit") == 0) {
@@ -112,7 +117,100 @@ void execution_time(char **args) {
         close(filefd);
     }
 
+    // pipes ls -ls | grep foo.txt
+    else if(pipeFlag == 1) {
+        execPipe(args);
+    }
     execArg(args);
+}
+
+void execPipe(char **args) {
+    int count = 0;
+    char lastChar;
+    int length = strlen(*args);
+
+    // if the length is greater than zero
+    if(length > 0) {
+        lastChar = args[0];
+    }
+
+    // increase the count from the very left to find when it hits pipe
+    for(int k=0; k<=length; k++) {
+        if(((args[k] == ' ' || args[k] == '\0') && lastChar != ' ')) {
+            count++;
+        }
+        lastChar = args[k];
+    }
+    count++;
+
+    // start declaring to split up entire argument into two parts
+    char *arguments[count];
+    char *token;
+    char *copy = (char *)malloc(strlen(args) + 1);
+    strcpy(copy, args);
+    token = strtok(copy, " ");
+    int i = 0;
+    int j = 0;
+
+    // while we still see a space present
+    while(token != NULL) {
+        arguments[i] = token;
+        token = strtok(NULL, " ");
+        i++;
+    }
+    arguments[i] = NULL; // nullify the last char so execv knows whats up
+
+    if(strstr(args, "|") != NULL) {
+        // current we are looking at
+        int position = 0;
+        // replace the arguments of the left side into a new array
+        for(j=0; j<count-1; j++) {
+            if((strcmp(arguments[j], "|") == 0)) {
+                arguments[j] = NULL;
+                position = j;
+            }
+        }
+        position++;
+        int size = position;
+        int fds[2];
+        if(pipe(fds) != 0) {
+            printf("%s\n", strerror(errno));
+        }
+        else {
+            int pid = fork();
+            if(pid == -1) {
+                printf("%s\n", strerror(errno));
+            }
+            if(pid == 0) {
+                close(1);
+                dup2(fds[1], 1);
+                close(fds[0]);
+                execArg(args);
+                exit(0);
+            }
+            else {
+                int newArraySize = count - position;
+                char *leftArgs[newArraySize];
+                for(int k=0; k<newArraySize; k++) {
+                    leftArgs[k] = arguments[position];
+                    position++;
+                }
+                int pid2 = fork();
+                if(pid2 == 0) {
+                    close(0);
+                    dup2(fds[0], 0);
+                    close(fds[1]);
+                    execArg(leftArgs);
+                    exit(0);
+                }
+                else {
+                    wait(NULL);
+                }
+            }
+        }
+        close(fds[0]);
+        close(fds[1]);
+    }
 }
 
 void execArg(char **args) {
@@ -170,7 +268,7 @@ void execArg(char **args) {
             printf("Welcome to the help function\n");
         }
         // if clear is found
-        else if(strcmp(args[current], "clear") == 0 || strcmp(args[current], "clr") == 0) {
+        else if(strcmp(args[current], "clear") == 0) {
             command = 1;
             printf("\e[1;1H\e[2J");
         }
@@ -229,10 +327,7 @@ void execArg(char **args) {
             exit(1);
         // parent process
         } else if(pid > 0){
-            int status;
-            do {
-                waitpid(pid, &status, WUNTRACED);
-            } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+            wait(NULL);
         } else {
             perror("shell");
         }

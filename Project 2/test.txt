@@ -1,0 +1,22 @@
+Built in commands
+environ(X)
+clear(X)
+quit(X)
+exit(X)
+cd(X)
+dir(X)
+pause(X)
+help(X)
+echo (SEG FAULT with)
+    echo jkfjdkfjdkfjdkfd
+
+Redirection
+>> (correct file output but closes out shell)
+    ls >> foo.txt
+> (correct file output but closes out shell)
+    ls > foo.txt
+< (X)
+
+Pipes
+| (main code done, figure out **arg business)
+& (not started)
