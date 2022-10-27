@@ -23,7 +23,7 @@ char currentWorkingDirectory[250];
 char** lineParse(char *line);
 void execArg(char **args);
 void listFiles(char* dirname);
-void execPipe(char **args);
+void execPipe(char **args, int count);
 
 // ------------------------------------------------------------------------------------------
 // Input launcher
@@ -62,7 +62,7 @@ void execution_time(char **args) {
     int count = 0;
     int pipeFlag = 1;
     while(args[count] != NULL) {
-        printf("args[%d] = %s\n", count, args[count]);
+        //printf("args[%d] = %s\n", count, args[count]);
         // redirectOut >
         if(strcmp(args[count], ">") == 0) {
             redirectOut = 1;
@@ -119,88 +119,69 @@ void execution_time(char **args) {
 
     // pipes ls -ls | grep foo.txt
     else if(pipeFlag == 1) {
-        execPipe(args);
+        execPipe(args, count);
     }
     execArg(args);
 }
 
-void execPipe(char **args) {
-    int count = 0;
-    char lastChar;
-    int length = strlen(*args);
-
-    // if the length is greater than zero
-    if(length > 0) {
-        lastChar = args[0];
-    }
-
-    // increase the count from the very left to find when it hits pipe
-    for(int k=0; k<=length; k++) {
-        if(((args[k] == ' ' || args[k] == '\0') && lastChar != ' ')) {
-            count++;
-        }
-        lastChar = args[k];
-    }
-    count++;
-
-    // start declaring to split up entire argument into two parts
-    char *arguments[count];
-    char *token;
-    char *copy = (char *)malloc(strlen(args) + 1);
-    strcpy(copy, args);
-    token = strtok(copy, " ");
-    int i = 0;
-    int j = 0;
-
-    // while we still see a space present
-    while(token != NULL) {
-        arguments[i] = token;
-        token = strtok(NULL, " ");
-        i++;
-    }
-    arguments[i] = NULL; // nullify the last char so execv knows whats up
-
-    if(strstr(args, "|") != NULL) {
-        // current we are looking at
+// Executing pipes
+//
+// ls -l | more
+void execPipe(char **args, int count) {
+        // position of the pipe
         int position = 0;
-        // replace the arguments of the left side into a new array
-        for(j=0; j<count-1; j++) {
-            if((strcmp(arguments[j], "|") == 0)) {
-                arguments[j] = NULL;
+        // find position of pipe and nullify it
+        for(int j=0; j<count-1; j++) {
+            if((strcmp(args[j], "|") == 0)) {
+                args[j] = NULL;
                 position = j;
             }
         }
         position++;
+        printf("Position: %d\n", position);
+
         int size = position;
         int fds[2];
+
+        // error checking
         if(pipe(fds) != 0) {
             printf("%s\n", strerror(errno));
         }
         else {
+            // process execution
             int pid = fork();
+            // error checking
             if(pid == -1) {
                 printf("%s\n", strerror(errno));
             }
+            // child process
             if(pid == 0) {
+
                 close(1);
                 dup2(fds[1], 1);
                 close(fds[0]);
+                //execlp(args[0], args[0], NULL);
                 execArg(args);
                 exit(0);
             }
+            // parent process
             else {
+
                 int newArraySize = count - position;
+                printf("newArraySize: %d\n", newArraySize);
                 char *leftArgs[newArraySize];
                 for(int k=0; k<newArraySize; k++) {
-                    leftArgs[k] = arguments[position];
+                    leftArgs[k] = args[position];
                     position++;
+                    printf("leftArgs[%d]: %s\n", k, leftArgs[k]);
                 }
                 int pid2 = fork();
                 if(pid2 == 0) {
                     close(0);
                     dup2(fds[0], 0);
                     close(fds[1]);
-                    execArg(leftArgs);
+                    execlp(leftArgs[0], leftArgs[0], NULL);
+                    //execArg(leftArgs);
                     exit(0);
                 }
                 else {
@@ -210,7 +191,6 @@ void execPipe(char **args) {
         }
         close(fds[0]);
         close(fds[1]);
-    }
 }
 
 void execArg(char **args) {

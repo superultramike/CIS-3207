@@ -289,7 +289,7 @@ void interactive() {
 // ------------------------------------------------------------------------------------------
 // Main function
 // ------------------------------------------------------------------------------------------
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[], char *envp[]) {
     // if only 1 argument go to interactive mode
     if(argc == 1) {
         interactive();
