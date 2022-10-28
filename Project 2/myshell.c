@@ -16,148 +16,15 @@
 // Global Variables
 // ------------------------------------------------------------------------------------------
 extern char **environ;
-char starterPath[100];
+char currentWorkingDirectory[250];
+
 // ------------------------------------------------------------------------------------------
 // Function Prototypes
 // ------------------------------------------------------------------------------------------
 char** lineParse(char *line);
-void execution_time(char **args);
+void execArg(char **args);
 void listFiles(char* dirname);
-
-// ------------------------------------------------------------------------------------------
-// Built in Commands (cd, clr, dir, environ, echo, help, pause, quit, exit)
-// Functions that need to finished: cd
-// relative path (from current working directory) ./
-// full path - call perror
-// if they didn't send, print cwd
-// ------------------------------------------------------------------------------------------
-// Function to quit the shell (same as exit)
-void shell_quit(char **args) {
-    exit(0);
-}
-
-// Function to pause the shell until Enter is pressed
-void shell_pause(char **args) {
-    printf("Program is paused\n");
-    printf("Press ENTER key to Continue\n");
-    getchar();
-}
-
-// Function to print a help command
-void shell_help(char **args) {
-    printf("Welcome to the help function\n");
-}
-
-// Function to exit the shell (same as quit)
-void shell_exit(char **args) {
-    exit(0);
-}
-
-// Function to clear the screen
-void shell_clr(char **args) {
-    printf("\e[1;1H\e[2J");
-}
-
-// Function to print all contents (including subdirectories)
-// of the current or specified directory
-void shell_dir(char **args) {
-    // 0 arguments to print contents of current directory
-    // dir ./Test
-    if(args[1] == NULL) {
-        listFiles(".");
-    }
-    // 1 arguments to print contents of specified directory
-    // dir /home/michael/Downloads
-    if(args[1] != NULL) {
-        listFiles(args[1]);
-    }
-
-    // If there is something present after the path name then return error
-    if(args[2] != NULL) {
-        printf("dir: cannot open directory\n");
-        exit(1);
-    }
-}
-
-// helper function to recursively prints the files
-// and directory contents of a current/given directory
-void listFiles(char* dirname) {
-    DIR* dir = opendir(dirname);
-
-    if(dir == NULL) {
-        return;
-    }
-    printf("Reading files in: %s\n", dirname);
-
-    struct dirent* entity;
-
-    entity = readdir(dir);
-    while(entity != NULL) {
-        printf("%s/%s\n", dirname, entity->d_name);
-        if(entity->d_type == DT_DIR && strcmp(entity->d_name, ".") != 0 && strcmp(entity->d_name, "..") != 0) {
-            char path[1000] = {0};
-            strcat(path, dirname);
-            strcat(path, "/");
-            strcat(path, entity->d_name);
-            listFiles(path);
-        }
-        entity = readdir(dir);
-    }
-    closedir(dir);
-}
-
-// Function to repeat user input after 'echo'
-void shell_echo(char **args) {
-    while(*++args) {
-        printf("%s", *args);
-        if(args[1]) printf(" ");
-    }
-    printf("\n");
-}
-
-// Function to print all environ variables
-void shell_environ(char **args) {
-    char **s = environ;
-
-    for(; *s; s++) {
-        printf("%s\n", *s);
-    }
-}
-
-// Is this working?
-void shell_cd(char **args) {
-    if(args[1] == NULL) {
-        printf("CWD: %s\n", starterPath);
-    }
-    else if(args[1] != NULL) {
-        //char addedPath[100];
-        strcat(starterPath, "/");
-        strcat(starterPath, args[1]);
-        printf("New Path: %s\n", starterPath);
-    }
-}
-
-struct builtin {
-    char *name;
-    void (*func)(char **args);
-};
-
-struct builtin builtins[] = {
-    {"quit", shell_quit},
-    {"pause", shell_pause},
-    {"help", shell_help},
-    {"exit", shell_exit},
-    {"clr", shell_clr},
-    {"clear", shell_clr},
-    {"cd", shell_cd},
-    {"dir", shell_dir},
-    {"echo", shell_echo},
-    {"environ", shell_environ}
-};
-
-int num_builtins() {
-    return sizeof(builtins) / sizeof(struct builtin);
-}
+void execPipe(char **args, int count);
 
 // ------------------------------------------------------------------------------------------
 // Input launcher
@@ -190,83 +57,316 @@ char** lineParse(char *line) {
 // put redirect flags in here
 // while there is still programs to execute keep going
 void execution_time(char **args) {
-    for (int i = 0; i < num_builtins(); i++) {
-        if (strcmp(args[0], builtins[i].name) == 0) {
-            builtins[i].func(args);
-            return;
-        }
-    }
-
-    // while there is another program to run, keep searching for possible special cases
-    // flags are all stored in here!!!!!!!!!!
-    // if redirect and pipe flags are present then run error
     int redirectIn = 0;
     int redirectOut = 0;
     int append = 0;
     int count = 0;
+    int pipeFlag = 0;
+
     while(args[count] != NULL) {
         //printf("args[%d] = %s\n", count, args[count]);
         // redirectOut >
         if(strcmp(args[count], ">") == 0) {
-            //printf("FOUND IT\n");
             redirectOut = 1;
         }
         // redirectIn <
-        if(strcmp(args[count], "<") == 0) {
-            //printf("FOUND IT\n");
+        else if(strcmp(args[count], "<") == 0) {
             redirectIn = 1;
         }
         // append >>
-        if(strcmp(args[count], ">>") == 0) {
-            //printf("FOUND IT\n");
+        else if(strcmp(args[count], ">>") == 0) {
             append = 1;
+        }
+        // pipe was found
+        else if(strcmp(args[count], "|") == 0) {
+            pipeFlag = 1;
+        }
+        // if quit is found
+        else if(strcmp(args[count], "quit") == 0) {
+            exit(0);
+        }
+        // if quit is found
+        else if(strcmp(args[count], "exit") == 0) {
+            exit(0);
         }
         count++;
     }
-    //printf("Count = %d\n", count);
 
-    int pid = fork();
+    // error checking if a redirection and a pipe is present
+    if( (pipeFlag == 1 && redirectIn == 1) || (pipeFlag == 1 && redirectOut == 1) || (pipeFlag == 1 && append == 1)) {
+        perror("Invalid Input, Please Try Again");
+        exit(0);
+    }
 
-    if(pid == 0) {
-        // works
-        // ls > foo.txt
-        // open foo.txt, duplicate opened filefd, execute using the first arg, then close
-        if(redirectOut == 1) {
+    // ls > foo.txt WORKS
+    else if(redirectOut == 1) {
+        int redirectOut_pid = fork();
+        if(redirectOut_pid == 0) {
             int filefd = open(args[count-1], O_WRONLY|O_CREAT, 0666);
             close(1);//Close stdout
             dup(filefd);
             execlp(args[0], args[0], NULL);
             close(filefd);
         }
-        // works BUT weird print out error at the beginning
-        // grep Romeo < skakespeare.txt
-        if(redirectIn == 1) {
-            int fd = open(args[count-1], O_RDONLY);
-            int sin = dup(0);
-            dup2(fd, 0);
-            dup2(sin,0);
-            close(fd);
+        else {
+            wait(NULL);
         }
-        // works
-        // ls >> foo.txt
-        if(append == 1) {
+
+    }
+    // grep Romeo < skakespeare.txt WORKS
+    else if(redirectIn == 1) {
+        int fd = open(args[count-1], O_RDONLY);
+        int sin = dup(0);
+        dup2(fd, 0);
+        dup2(sin,0);
+        close(fd);
+    }
+    // ls >> foo.txt WORKS
+    else if(append == 1) {
+        int append_pid = fork();
+        if(append_pid == 0) {
             int filefd = open(args[count-1], O_CREAT | O_WRONLY | O_APPEND, 0666);
             close(1);
             dup(filefd);
             execlp(args[0], args[0], NULL);
             close(filefd);
         }
-        execvp(args[0], args);
-        perror("shell");
-        exit(1);
-    } else if(pid > 0){
-        int status;
-        do {
-            waitpid(pid, &status, WUNTRACED);
-        } while (!WIFEXITED(status) && !WIFSIGNALED(status));
-    } else {
-        perror("shell");
+        else {
+            wait(NULL);
+        }
     }
+
+    // pipes ls -ls | grep foo.txt
+    else if(pipeFlag == 1) {
+        printf("RAN\n");
+        execPipe(args, count);
+        exit(0);
+    }
+    execArg(args);
+}
+
+// Executing pipes
+// cat test.txt | sort
+// ls -l | more
+void execPipe(char **args, int count) {
+        // position of the pipe
+        int position = 0;
+        // find position of pipe and nullify it
+        for(int j=0; j<count-1; j++) {
+            if((strcmp(args[j], "|") == 0)) {
+                args[j] = NULL;
+                position = j;
+            }
+        }
+        position++;
+        printf("Position: %d\n", position);
+
+        int fds[2];
+
+        // error checking
+        if(pipe(fds) != 0) {
+            printf("%s\n", strerror(errno));
+        }
+        else {
+            // process execution
+            int pid = fork();
+            // error checking
+            if(pid == -1) {
+                printf("%s\n", strerror(errno));
+            }
+            // child process
+            if(pid == 0) {
+
+                close(1);
+                dup2(fds[1], 1);
+                close(fds[0]);
+                //execlp(args[0], args[0], NULL);
+                execArg(args);
+                exit(0);
+            }
+            // parent process
+            else {
+
+                int newArraySize = count - position;
+                printf("newArraySize: %d\n", newArraySize);
+                char *leftArgs[newArraySize];
+                for(int k=0; k<newArraySize; k++) {
+                    leftArgs[k] = args[position];
+                    position++;
+                    printf("leftArgs[%d]: %s\n", k, leftArgs[k]);
+                }
+                int pid2 = fork();
+                if(pid2 == 0) {
+                    close(0);
+                    dup2(fds[0], 0);
+                    close(fds[1]);
+                    execlp(leftArgs[0], leftArgs[0], NULL);
+                    //execArg(leftArgs);
+                    exit(0);
+                }
+                else {
+                    wait(NULL);
+                }
+            }
+        }
+        close(fds[0]);
+        close(fds[1]);
+}
+
+void execArg(char **args) {
+    char filePath[250];
+    char *path = "/bin/";
+    int command = 0;
+    int current = 0;
+
+    // check all arguments
+    while(args[current] != NULL) {
+        // if cd is found sorta works
+        if(strcmp(args[current], "cd") == 0) {
+            command = 1;
+            if(args[current + 1] != NULL) {
+                if(args[current + 2] != NULL) {
+                    printf("Too many arguments!\n");
+                    break;
+                }
+                if(chdir(args[current + 1]) != 0) {
+                    printf("%s\n", strerror(errno));
+                }
+            }
+            else {
+                printf("%s\n", currentWorkingDirectory);
+            }
+        }
+        // if environ is found
+        else if(strcmp(args[current], "environ") == 0) {
+            command = 1;
+            char **s = environ;
+
+            for(; *s; s++) {
+                printf("%s\n", *s);
+            }
+        }
+        // if echo is found
+        else if(strcmp(args[current], "echo") == 0) {
+            command = 1;
+            int count = 1;
+            while(args[count] != NULL) {
+                printf("%s", args[count]);
+                count++;
+            }
+            printf("\n");
+        }
+        // if pause is found
+        else if(strcmp(args[current], "pause") == 0) {
+            command = 1;
+            printf("Program is paused\n");
+            printf("Press ENTER key to Continue\n");
+            getchar();
+        }
+        // if help is found
+        if(strcmp(args[current], "help") == 0) {
+            command = 1;
+            int help_pid = fork();
+            if(help_pid == 0) {
+                char *help_args[] = {"more", "-d", "shakespeare.txt", NULL};
+                execvp("more", help_args);
+            }
+            else {
+                wait(NULL);
+            }
+            //printf("Welcome to the help function\n");
+        }
+        // if clear is found
+        else if(strcmp(args[current], "clear") == 0 || strcmp(args[current], "clr") == 0) {
+            command = 1;
+            printf("\e[1;1H\e[2J");
+        }
+        // if dir is found
+        else if(strcmp(args[current], "dir") == 0) {
+            command = 1;
+            // 0 arguments to print contents of current directory
+            // dir ./Test
+            if(args[1] == NULL) {
+                listFiles(".");
+            }
+            // 1 arguments to print contents of specified directory
+            // dir /home/michael/Downloads
+            if(args[1] != NULL) {
+                listFiles(args[1]);
+            }
+
+            // If there is something present after the path name then return error
+            if(args[2] != NULL) {
+                printf("dir: cannot open directory\n");
+                exit(1);
+            }
+        }
+        current++;
+    }
+
+    if(command == 0) {
+        //filePath = getenv("PATH");
+        strcpy(filePath, path);
+        strcat(filePath, args[0]);
+
+        // fork here
+        int pid = fork();
+
+        // child process
+        if(pid == 0) {
+            if(execv(filePath, args) != -1) {
+                // run argument
+            }
+            // try current directory
+            else {
+                strcpy(filePath, currentWorkingDirectory);
+                strcat(filePath, "/");
+                strcat(filePath, args[0]);
+                if(execv(filePath, args) != -1) {
+                    exit(0);
+                    // does nothing
+                }
+                else {
+                    printf("%s\n", strerror(errno));
+                    exit(0);
+                }
+            }
+            perror("shell");
+            exit(1);
+        // parent process
+        } else if(pid > 0){
+            wait(NULL);
+        } else {
+            perror("shell");
+        }
+    }
+}
+
+// helper function to recursively prints the files
+// and directory contents of a current/given directory
+void listFiles(char* dirname) {
+    DIR* dir = opendir(dirname);
+
+    if(dir == NULL) {
+        return;
+    }
+    printf("Reading files in: %s\n", dirname);
+
+    struct dirent* entity;
+
+    entity = readdir(dir);
+    while(entity != NULL) {
+        printf("%s/%s\n", dirname, entity->d_name);
+        if(entity->d_type == DT_DIR && strcmp(entity->d_name, ".") != 0 && strcmp(entity->d_name, "..") != 0) {
+            char path[1000] = {0};
+            strcat(path, dirname);
+            strcat(path, "/");
+            strcat(path, entity->d_name);
+            listFiles(path);
+        }
+        entity = readdir(dir);
+    }
+    closedir(dir);
 }
 
 // ------------------------------------------------------------------------------------------
@@ -279,6 +379,8 @@ void batch(char *filename) {
     char *line = NULL;
     size_t len = 0;
     size_t read;
+    setenv("PATH", "/bin/", 1);
+    getcwd(currentWorkingDirectory, 100);
 
     file = fopen(filename, "rb");
 
@@ -304,14 +406,15 @@ void interactive() {
     char *line = NULL;
     size_t len = 0;
     size_t read;
-    getcwd(starterPath, 100);
+    setenv("PATH", "/bin/", 1);
+    getcwd(currentWorkingDirectory, 100);
 
     while(1) {
-        printf("%s/myshell> ", starterPath);
+        printf("%s/myshell> ", currentWorkingDirectory);
         while((read = getline(&line, &len, stdin)) != 1) {
             char **tokens = lineParse(line);
             execution_time(tokens);
-            printf("%s/myshell> ", starterPath);
+            printf("%s/myshell> ", currentWorkingDirectory);
         }
     }
 }

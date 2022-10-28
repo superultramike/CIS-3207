@@ -1,4 +1,3 @@
-
 Built in commands
 environ(X)
 clear(X)
@@ -7,17 +6,19 @@ exit(X)
 cd(X)
 dir(X)
 pause(X)
-help(X)
-echo (SEG FAULT with)
-    echo jkfjdkfjdkfjdkfd
-
+help(add more)
+echo (X)
 Redirection
->> (correct file output but closes out shell)
+>> (X)
     ls >> foo.txt
 > (correct file output but closes out shell)
     ls > foo.txt
 < (X)
 
 Pipes
-| (main code done, figure out **arg business)
+| (X)
 & (not started)
+
+Write full help/readme
+Make makefile
+make comments

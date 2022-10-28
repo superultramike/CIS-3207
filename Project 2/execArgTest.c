@@ -60,7 +60,8 @@ void execution_time(char **args) {
     int redirectOut = 0;
     int append = 0;
     int count = 0;
-    int pipeFlag = 1;
+    int pipeFlag = 0;
+
     while(args[count] != NULL) {
         //printf("args[%d] = %s\n", count, args[count]);
         // redirectOut >
@@ -90,14 +91,26 @@ void execution_time(char **args) {
         count++;
     }
 
+    // error checking if a redirection and a pipe is present
+    if( (pipeFlag == 1 && redirectIn == 1) || (pipeFlag == 1 && redirectOut == 1) || (pipeFlag == 1 && append == 1)) {
+        perror("Invalid Input, Please Try Again");
+        exit(0);
+    }
+
     // ls > foo.txt WORKS
-    if(redirectOut == 1) {
-        int filefd = open(args[count-1], O_WRONLY|O_CREAT, 0666);
-        close(1);//Close stdout
-        dup(filefd);
-        // CHANGE THIS ONE
-        execlp(args[0], args[0], NULL);
-        close(filefd);
+    else if(redirectOut == 1) {
+        int redirectOut_pid = fork();
+        if(redirectOut_pid == 0) {
+            int filefd = open(args[count-1], O_WRONLY|O_CREAT, 0666);
+            close(1);//Close stdout
+            dup(filefd);
+            execlp(args[0], args[0], NULL);
+            close(filefd);
+        }
+        else {
+            wait(NULL);
+        }
+
     }
     // grep Romeo < skakespeare.txt WORKS
     else if(redirectIn == 1) {
@@ -109,23 +122,30 @@ void execution_time(char **args) {
     }
     // ls >> foo.txt WORKS
     else if(append == 1) {
-        int filefd = open(args[count-1], O_CREAT | O_WRONLY | O_APPEND, 0666);
-        close(1);
-        dup(filefd);
-        // CHANGE THIS ONE
-        execlp(args[0], args[0], NULL);
-        close(filefd);
+        int append_pid = fork();
+        if(append_pid == 0) {
+            int filefd = open(args[count-1], O_CREAT | O_WRONLY | O_APPEND, 0666);
+            close(1);
+            dup(filefd);
+            execlp(args[0], args[0], NULL);
+            close(filefd);
+        }
+        else {
+            wait(NULL);
+        }
     }
 
     // pipes ls -ls | grep foo.txt
     else if(pipeFlag == 1) {
+        printf("RAN\n");
         execPipe(args, count);
+        exit(0);
     }
     execArg(args);
 }
 
 // Executing pipes
-//
+// cat test.txt | sort
 // ls -l | more
 void execPipe(char **args, int count) {
         // position of the pipe
@@ -140,7 +160,6 @@ void execPipe(char **args, int count) {
         position++;
         printf("Position: %d\n", position);
 
-        int size = position;
         int fds[2];
 
         // error checking
@@ -229,9 +248,10 @@ void execArg(char **args) {
         // if echo is found
         else if(strcmp(args[current], "echo") == 0) {
             command = 1;
-            while(*++args) {
-                printf("%s", *args);
-                if(args[1]) printf(" ");
+            int count = 1;
+            while(args[count] != NULL) {
+                printf("%s", args[count]);
+                count++;
             }
             printf("\n");
         }
@@ -245,10 +265,18 @@ void execArg(char **args) {
         // if help is found
         if(strcmp(args[current], "help") == 0) {
             command = 1;
-            printf("Welcome to the help function\n");
+            int help_pid = fork();
+            if(help_pid == 0) {
+                char *help_args[] = {"more", "-d", "shakespeare.txt", NULL};
+                execvp("more", help_args);
+            }
+            else {
+                wait(NULL);
+            }
+            //printf("Welcome to the help function\n");
         }
         // if clear is found
-        else if(strcmp(args[current], "clear") == 0) {
+        else if(strcmp(args[current], "clear") == 0 || strcmp(args[current], "clr") == 0) {
             command = 1;
             printf("\e[1;1H\e[2J");
         }
@@ -276,7 +304,6 @@ void execArg(char **args) {
     }
 
     if(command == 0) {
-        //setenv("PATH", "/bin/", 1);
         //filePath = getenv("PATH");
         strcpy(filePath, path);
         strcat(filePath, args[0]);
@@ -349,6 +376,7 @@ void interactive() {
     char *line = NULL;
     size_t len = 0;
     size_t read;
+    setenv("PATH", "/bin/", 1);
     getcwd(currentWorkingDirectory, 100);
 
     while(1) {

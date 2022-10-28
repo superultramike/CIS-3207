@@ -1,3 +1,6 @@
+backgroundTest
+backgroundTest.c
+backgroundTest.o
 batch_test
 batch_test.c
 batch_test.o
@@ -10,7 +13,6 @@ environTest.c
 environTest.o
 execArgTest
 execArgTest.c
-fofoob.txt
 foo.txt
 interactive_test
 interactive_test.c
