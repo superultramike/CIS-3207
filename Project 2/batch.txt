@@ -1,1 +1,5 @@
+ls
+cd
+cd Test
+ls
 cat test.txt | sort

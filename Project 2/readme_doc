@@ -1,0 +1,86 @@
+USER MANUAL
+
+NAME
+	"myshell" (Project 2) by Michael Ewing 
+	
+SYNOPSIS
+	This program is a shell or a command line interpreter (CLI) that operates in the basic way of providing 
+	a medium of interactive between the user and the kernel/lower level.
+
+DESCRIPTION
+	This shell consists of two main modes of operation, the interactive mode and the batch mode. 
+	Interactive mode consists of repeatedly asking the user for input to process and output back to the user. 
+	While the batch mode is where the user prepares commands ahead of time in a text file for the shell to 
+	read said file and output in the terminal. While these two modes of operation are vastly different in functionality,
+	their internal capabilities are exactly the same. For example both modes of operation allow execution of built-in commands,
+	external commands, redirection, piping and background processes. (Further explaination of internal capabilities 
+	and their functions will be displayed in options & arguments section)
+
+OPTIONS
+	Batch Mode - This mode can be activated during compiling by inputting ./myshell 'NAME OF FILE',
+	where the name of the file could be placed with any file extensions. Once this mode is selected 
+	it declares a few starter variables to properly open the user given file and setup the reading 
+	content while loop. Next the batch mode declares the path variable so that if /bin commands are used, 
+	the execution function can look for them in the correct location. Next the Interactive mode does some 
+	error checking on the file and proceeds to read the file until a NULL pointer is reached from the READ 
+	function. As the READ function cycles through it parses each line and splits it into tokens to be executed on. 
+	Once an entire line is tokenize, it will import said tokens into the EXECUTION_TIME function to be processed. 
+	Once the while ends, it closes the user given file, frees the memory used towards reading the line and exits the shell.
+	
+	Interactive Mode - This mode can be activated during compiling by inputting ./myshell, 
+	where there are no arguments after said statement. Once this mode is selected it declares a 
+	few starter variable to properly setup the reading while loop. Next this mode declares the 
+	path variable and assigns it to a variable called currentWorkingDirectory which could be manipulated 
+	with some built-in commands like cd. Then the constant while(1) loop begins by displaying the shell 
+	prompt to the user (CWD/myshell). Inside this while(1) loop, a while loop that is constantly reading 
+	STDIN aka user input is being executed. As the READ function cycles through it parses each line and 
+	splits it into tokens to be executed on. Once an entire line is tokenize, it will import said tokens 
+	into the EXECUTION_TIME function to be processed, and finally reprints the shell prompt again.
+
+ARGUMENTS (ALL ARE USABLE IN BOTH MODES)
+	BUILT-INS
+		cd - This command can change the current directory to a user-given directory by using 'cd <directory>'. If a <directory> argument isn't present, then print CWD. The shell will throw an 	
+		error if the user-given directory doesn't exist. This command will also change the PWD environment variable
+			EXAMPLES: cd Test	or 	cd
+		
+		environ - This command will print all environment strings
+		
+		echo - This command will print all given user-given input after echo command, for example 'echo yes yes' would print back 'yes yes' for the user.
+		
+		pause - This command will pause operation of the shell until 'Enter' is pressed
+		
+		help - Display the user manual using the more filter (IT'S WHAT YOU ARE READING RN!)
+		
+		clear/clr - Either command can be used to clear the shell screen
+		
+		dir - This command will list all contents of user-given directory (both main and sub-directories)
+			EXAMPLES: dir ./Test	or	dir /home/michael/Downloads
+		
+		quit/exit - Either command can be used to exit the shell instantly.
+	
+	EXTERNAL COMMANDS - These are all the commands that are normally accepted in other types of shells within the /bin/ file system. For example a few commands that can be used are 
+		ls (list directory contents)
+		cat (print contents of a file)
+		More less common commands can be found here (https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch03s04.html)
+		To clarify, this shell will only execute commands found in /bin/ or in the current working directory, NOWHERE ELSE
+	
+	REDIRECTION
+		Redirection Out (>) - This command is all about importing all the output of a given command as the input for another command/file. Additionally this command will rewrite or create an 
+		entirely new file to run successfully (use append for just additions).
+			EXAMPLES: ls > foo.txt
+		
+		Redirection In (<) - This command is all about using the contents of the right side as input for the left side. Additionally this command will not rewrite or create user-given file, if 
+		user-given file isn't present it will throw an error.
+			EXAMPLES: grep Romeo < shakespeare.txt
+		
+		Append (>>) - This command is all about adding the contents of the left side to the right side command/file. Additionally this command will not overwrite old contents of file, but it 
+		will create the file if it isn't found.
+			EXAMPLES: ls >> foo.txt
+	
+	PIPING (1 PIPE) - This command allows the user to send the output of the left side into the input of the right side of the argument line (just like how you would think a pipe would flow). P.S 
+	my shell assumes that there is a space provided between commands and pipes. 
+		EXAMPLES: cat test.txt | sort	or	ls -l | more		
+		
+	PS: The Shell will throw an error if a redirection AND a pipe symbol is present in user-given input.
+	
+	BACKGROUND PROCESSES - given the nature of my submission, I was not able to successfully implement background processes into this shell	

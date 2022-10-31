@@ -102,6 +102,7 @@ void execution_time(char **args) {
         dup2(sin,0);
         close(fd);
     }
+
     // ls >> foo.txt WORKS
     else if(append == 1) {
         int filefd = open(args[count-1], O_CREAT | O_WRONLY | O_APPEND, 0666);

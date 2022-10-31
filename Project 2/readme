@@ -1,0 +1,43 @@
+TESTING
+	In terms of testing, I wanted to split my cases into two groups with the way batch mode
+	and interactive mode work when scanning and executing commands. For example the formatting
+	for batch mode must be specific in the way that it's obviously preprogrammed unlike
+	interactive mode. Thankfully if I got the starting procedure done for correct output in
+	batch mode, then it would translate correctly in interactive mode. This is because, my
+	two modes of interaction in the shell share the same line parser and command/execution 
+	handler. This advantage allows me to predict output and possible errors covering both
+	tracks. Some of the most common forms of testing were the number of arguments in a given
+	built-in command and validating that certain flags couldn't be operated on at the same time,
+	for example redirection and pipe BOTH being present would produce an error. There were one 
+	or two caveats to easing the process of testing, like assuming the user WILL place a space 
+	between commands in any given argument.
+
+DESIGN
+	As suggested by my TA (Alex), I wanted to immediately leave main and "fork" off into another 
+	function and then "fork" again when presented with the different shell modes. Other then those 
+	two forms of seperation, I wanted to keep every other possible function consistent with user-input.
+	For example making one line parser that could be applied to BOTH interactive and batch mode. 
+	Or allowing execution to happen in the same vein between modes regardless of built-in/external/pipe/redirection/etc.
+	I wanted to make functions feel purposeful when the input or output diverts to another function.
+	I didn't want to jump around my code looking for where a path variable went or where some token turns up.
+	The goal of the design was to be as concise and as small as possible,
+	(regardless of how many lines of comments I wrote, haha). Besides those attempted positives, my main blindspot
+	is the complete lack of any background process (&) functionality. I had completely no idea how to even attempt it,
+	or attempt to understand it given my schedule over the past month and everything else happening 
+	at the scale of this assignment.
+	
+DISCUSSION
+	I'm not sure what to put into this section besides the fact that this program is probably the most
+	extensive piece of code I have ever written in my life (hopefully that record will be broken later in my career haha).
+	This project alone has taught me so much about incorporating past assignments into a similar context that 
+	just requires that extra push into uncharted territory. While I'm sure there are errors and bugs and lack of 
+	functionality in some departments (like background processes), that doesn't mean I'm not proud
+	with what I've produced over the past few weeks even ON TOP of the rest of my classes and the extensive coursework 
+	in this class alone. While I'm talking about my own personal experience, I think it's important to mention the position,
+	I've been able to recognize of myself in this "Hardest Class of the entire CIS department" -Quote said by every possible CIS Student.
+	What I mean is that I'm lucky to be in a position where I have support from other students that I could chat with
+	to discuss about this project, or TAs that could give an EXTREMELY NEEDED explaination on the myriad of different concepts
+	present in just this project alone. Sometimes us computer science students don't feel like we are heard to the
+	extent that we should be (even if we aren't that social unlike other majors haha).
+	But just know if you do read all of this (Whether you are one of the TAs or Prof Kwatny himself), just know I appreciate the work
+	and the commitment you all project onto all of us in this weird time in our lives. Thank You
