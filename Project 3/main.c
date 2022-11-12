@@ -5,103 +5,96 @@
 #include <unistd.h>
 #include<sys/wait.h>
 
-// write info into the left side of the pipe whose write-end is given by pipe_write_end
-void producer1(FILE *pipe_write_end) {
-    // produce 100 elements
-    for(int i=0; i<= 10; i++) {
-        // send each element i through the left side stream of the pipe
-        fprintf(pipe_write_end, "%d ", i);
-        printf("Producer 1 made: %d\n", i);
-    }
-    // close the hatch since we are done
-    fclose(pipe_write_end);
-    // exit function
-    exit(0);
+#define MAX 20
+
+typedef struct {
+    int id;
+    int type;
+} product;
+
+// Global count that confirms that you got all the elements from said buffer
+int count1 = 0;
+int count2 = 0;
+
+int buffer1[20], fillIndex1;
+int buffer2[20], fillIndex2;
+
+// Buffer operations
+// function to put product 1 type into queue
+void put1(int value) {
+    //printf("RAN\n");
+    buffer1[fillIndex1] = value;
+    fillIndex1 = (fillIndex1 + 1) % MAX;
+    printf("Put1: %d\n", value);
+    count1++;
 }
 
-// write info into the left side of the pipe whose write-end is given by pipe_write_end
-void producer2(FILE *pipe_write_end) {
-    // produce 100 elements
-    for(int i=0; i<= 10; i++) {
-        // send each element i through the left side stream of the pipe
-        fprintf(pipe_write_end, "%d ", i);
-        printf("Producer 2 made: %d\n", i);
-    }
-    // close the hatch since we are done
-    fclose(pipe_write_end);
-    // exit function
-    exit(0);
+// function to put product 2 type into queue
+void put2(int value) {
+    //printf("RAN\n");
+    buffer2[fillIndex2] = value;
+    fillIndex2 = (fillIndex2 + 1) % MAX;
+    printf("Put2: %d\n", value);
+    count2++;
 }
 
-// read info from right side of the pipe whose read-end is given by pipe_read_end and print to STDOUT
-void consumer(FILE *pipe_read_end) {
-    int n,k;
-    while(1) {
-        // read the right side of the pipe with fscanf and declare it as a variable to be used for STDOUT
-        int n = fscanf(pipe_read_end, "%d", &k);
-        // If fscanf was successful
-        if(n == 1) printf("consumer: got %d\n", k);
-        else break;
-    }
-    // close the hatch since we are done reading everything
-    fclose(pipe_read_end);
-    exit(0);
-}
+// WRITE GET FUNCTION HERE
 
 int main() {
-    int producer1_id, producer2_id, consumer_id;
+    // DECLARE PTHREADS THERE
+
+    product p;
     int pd[2];
-    FILE *pipe_write_end, *pipe_read_end;
 
-    // build the pipe by creating two FDs in the pd array
-    // the first element of pd is used for reading data from the pipe
-    // the second element of pd is used for writing data to the pipe
-    pipe(pd);
-
-    // the right side of the pipe
-    // create a stream to read a text file
-    pipe_read_end = fdopen(pd[0], "r");
-
-    // the left side of the pipe
-    // create a stream to write to a text file
-    pipe_write_end = fdopen(pd[1], "w");
-
-    // fork the 1st producer
-    producer1_id = fork();
-    //child process
-    if(producer1_id == 0) {
-        // close the right side of the pipe since we are writing new data
-        fclose(pipe_read_end);
-        // call the producer function to write new data
-        producer1(pipe_write_end);
+    if(pipe(pd) == -1) {
+        perror("pipe");
+        exit(EXIT_FAILURE);
     }
 
-    // fork the 2nd producer
-    producer2_id = fork();
-    //child process
-    if(producer2_id == 0) {
-        // close the right side of the pipe since we are writing new data
-        fclose(pipe_read_end);
-        // call the producer function to write new data
-        producer2(pipe_write_end);
+    int pid = fork();
+    if(pid == 0) {
+        // producer 1 write to the pipe
+        close(pd[0]);
+        int count = 0;
+        while(count != 10) {
+            p.id = count;
+            p.type = 1;
+            write(pd[1], &p, sizeof(p));
+            count += 1;
+            usleep(100000);
+        }
     }
-
-    // fork the consumer
-    consumer_id = fork();
-    // child process
-    if(consumer_id == 0) {
-        // close the left side of the pipe since we are reading new data
-        fclose(pipe_write_end);
-        // call the consumer function to read the new data
-        consumer(pipe_read_end);
+    else {
+        int second_pid = fork();
+        if(second_pid == 0) {
+            // producer 2 write to the pipe
+            close(pd[0]);
+            int count = 0;
+            while(count != 10) {
+                p.id = count;
+                p.type = 2;
+                write(pd[1], &p, sizeof(p));
+                count += 1;
+                usleep(100000);
+            }
+        }
+        // Distributor that reads the pipe and sends data to specific queue
+        while(1) {
+            // read the pipe
+            if((read(pd[0], &p, sizeof(p)) > 0)) {
+                //printf("Product ID: %d, Type: %d\n", p.id, p.type);
+                if(p.type == 1) {
+                    // put it in the product type 1 queue
+                    //printf("type 1!\n");
+                    put1(p.id);
+                }
+                if(p.type == 2) {
+                    // put it in the product type 2 queue
+                    //printf("typ 2!\n");
+                    put2(p.id);
+                }
+            }
+        }
+        exit(0);
     }
-
-    // Close each side of the pipe and wait for each child process to finish
-    fclose(pipe_read_end);
-    fclose(pipe_write_end);
-    wait(NULL);
-    wait(NULL);
-    wait(NULL);
-
-    return 0;
 }
