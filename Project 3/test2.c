@@ -3,7 +3,9 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include<sys/wait.h>
+#include <sys/wait.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 typedef struct {
     int id;
@@ -33,6 +35,8 @@ pthread_cond_t full_2;
 
 pthread_mutex_t mutex;
 
+pthread_t cons[2];
+
 int buffer_1_amount = 0;
 int buffer_2_amount = 0;
 int buffer_1_fillIndex = 0;
@@ -47,7 +51,6 @@ int main(int argc, char * argv[]) {
     buffer_2 = malloc(sizeof(product) * max);
 
     product p;
-    pthread_t cons[2];
     for(int i=0; i<2; i++) {
         pthread_create(&cons[i], NULL, type_1_consumer, NULL);
         pthread_create(&cons[i], NULL, type_2_consumer, NULL);
@@ -155,33 +158,43 @@ product buffer_2_get() {
 
 void * type_1_consumer(void * arg) {
     while(1) {
-        FILE *fp;
-        fp = fopen("foo.txt", "w+");
+        pid_t tid = gettid();
+        FILE *fp1;
+        fp1 = fopen("foo.txt", "a");
+
         pthread_mutex_lock(&mutex);
         while(buffer_1_amount == 0) {
             pthread_cond_wait(&full_1, &mutex);
         }
         product p = buffer_1_get();
-        printf("Product ID: %d, Product Type: %d\n", p.id, p.type);
-        fprintf(fp, "This is testing for fprintf...\n");
+
+        fprintf(fp1, "Type: %d, Thread ID: %d, Production Sequence #: %d, Consumption Sequence #: %d\n", p.type, tid, buffer_1_useIndex, p.id);
+        printf("Type: %d, Thread ID: %d, Production Sequence #: %d, Consumption Sequence #: %d\n", p.type, tid, buffer_1_useIndex, p.id);
+
         pthread_cond_signal(&empty_1);
         pthread_mutex_unlock(&mutex);
+        fclose(fp1);
     }
 }
 
 void * type_2_consumer(void * arg) {
     while(1) {
-        FILE *fp;
-        fp = fopen("foo.txt", "w+");
+        pid_t tid = gettid();
+        FILE *fp2;
+        fp2 = fopen("foo.txt", "a");
+
         pthread_mutex_lock(&mutex);
         while(buffer_2_amount == 0) {
             pthread_cond_wait(&full_2, &mutex);
         }
         product p = buffer_2_get();
-        printf("Product ID: %d, Product Type: %d\n", p.id, p.type);
-        fprintf(fp, "This is testing for fprintf...\n");
+
+        fprintf(fp2, "Type: %d, Thread ID: %d, Production Sequence #: %d, Consumption Sequence #: %d\n", p.type, tid, buffer_2_useIndex, p.id);
+        printf("Type: %d, Thread ID: %d, Production Sequence #: %d, Consumption Sequence #: %d\n", p.type, tid, buffer_2_useIndex, p.id);
+
         pthread_cond_signal(&empty_2);
         pthread_mutex_unlock(&mutex);
-        fclose(fp)
+
+        fclose(fp2);
     }
 }
