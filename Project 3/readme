@@ -1,0 +1,26 @@
+TESTING
+	In terms of testing, I wanted to strictly focus on producing correct output in the terminal and not the file.
+	Because I knew if I got it right in the terminal then it would correct in the file output. But that's talking
+	in macro terms. In micro terms, I would first test the output of the pipe, then the distributor buffer and then
+	printing output of the two circular queues and finally testing the consumer with normal concurrent print outs
+
+DESIGN
+	At first my design was more function based but that seemed to completely negate the use of forks and child processes
+	(I'm not sure how I completely forgot about it's practicality in this project). Once I got over that hurdle I create small
+	helper functions to off shoot the different commands that each stage of the project needs. Speaking to the steps of design
+	I took here they are in order of design implementation.
+		Get main working
+		Get reading from a pipe working with two threads
+		Send pipe contents to the distributor buffer
+		Using forking and child processes, push each specific product type into it's specific buffer
+			Use a mutex w/ CV to properly get each product type
+		Get two consumer threads of each type working to grab specific buffer
+		Use a mutex w/ CV to properly get each product type while having another consumer present
+		Get proper read out to file per producer
+	
+DISCUSSION
+	Obviously I found this project to be significantly easier then the shell project. Additionally this project was
+	supplied with plenty of sample code from the textbooks and deep explainations of each given topic. I think there's
+	definetely fields of code I could better understand like creating a better way to call the file pointer (since I open
+	the file pointer everytime I run the while loop which is not efficient). Or the fact that I don't fully understand the
+	print out contents to the file (I think I got it right but I'm not entirely sure).
