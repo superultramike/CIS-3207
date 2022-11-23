@@ -52,8 +52,6 @@ int main() {
         // with function signal_handler
         signal(SIGUSR1, signal1_handler);
         signal(SIGUSR2, signal2_handler);
-        //pthread_create(&cons[0], NULL, signal1_handler, NULL);
-        //pthread_create(&cons[1], NULL, signal2_handler, NULL);
 
         while(1) {
             sleep(1);
