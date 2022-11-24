@@ -22,11 +22,15 @@ int main(int argc, char **argv) {
     int pid = fork();
 
     if(pid == 0) {
+        /*
         char * arguments[2];
         arguments[0] = "catcher";
         arguments[1] = NULL;
+        */
 
-        if(execvp("catcher", arguments) < 0) {
+        char* argument_list[] = {"catcher", NULL}; // NULL terminated array of char* strings
+
+        if(execvp("catcher", argument_list) < 0) {
             perror("execvp");
             return 1;
         }
