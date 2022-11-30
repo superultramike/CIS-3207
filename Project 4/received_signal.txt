@@ -1,17 +1,25 @@
-Type: SIGUSR2, Time: what
-Type: SIGUSR1, Time: what
-Type: SIGUSR1, Time: what
-Type: SIGUSR2, Time: what
-Type: SIGUSR1, Time: what
-Type: SIGUSR2, Time: what
-Type: SIGUSR1, Time: what
-Type: SIGUSR2, Time: what
-Type: SIGUSR2, Time: what
-Type: SIGUSR2, Time: what
-Type: SIGUSR2, Time: what
-Type: SIGUSR1, Time: what
-Type: SIGUSR1, Time: what
-Type: SIGUSR1, Time: what
-Type: SIGUSR1, Time: what
-Type: SIGUSR2, Time: what
-Type: SIGUSR1, Time: what
+Signal type: 2, Time received: 0.000091
+Signal type: 1, Time received: 0.098184
+Signal type: 2, Time received: 0.159586
+Signal type: 2, Time received: 0.177738
+Signal type: 1, Time received: 0.207825
+Signal type: 1, Time received: 0.293681
+Signal type: 2, Time received: 0.386245
+Signal type: 2, Time received: 0.422748
+Signal type: 1, Time received: 0.506064
+Signal type: 1, Time received: 0.568828
+Signal type: 1, Time received: 0.613933
+Signal type: 1, Time received: 0.644886
+Signal type: 2, Time received: 0.669668
+Signal type: 2, Time received: 0.725531
+Signal type: 1, Time received: 0.771721
+Signal type: 1, Time received: 0.811928
+Signal type: 1, Time received: 0.904185
+Signal type: 2, Time received: 0.951866
+Signal type: 1, Time received: 0.981136
+Signal type: 2, Time received: 1.029390
+Signal type: 1, Time received: 1.040394
+Signal type: 1, Time received: 1.060001
+Signal type: 2, Time received: 1.116948
+Signal type: 1, Time received: 1.208817
+Signal type: 2, Time received: 1.220048

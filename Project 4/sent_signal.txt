@@ -1,17 +1,25 @@
-Type: SIGUSR2, Time: 2
-Type: SIGUSR1, Time: 1
-Type: SIGUSR1, Time: 1
-Type: SIGUSR2, Time: 2
-Type: SIGUSR1, Time: 1
-Type: SIGUSR2, Time: 2
-Type: SIGUSR1, Time: 1
-Type: SIGUSR2, Time: 2
-Type: SIGUSR2, Time: 2
-Type: SIGUSR2, Time: 2
-Type: SIGUSR2, Time: 2
-Type: SIGUSR1, Time: 1
-Type: SIGUSR1, Time: 1
-Type: SIGUSR1, Time: 1
-Type: SIGUSR1, Time: 1
-Type: SIGUSR2, Time: 2
-Type: SIGUSR1, Time: 1
+Type: SIGUSR2, Current Time Sent: Wed Nov 30 15:03:00 2022
+Type: SIGUSR1, Current Time Sent: Wed Nov 30 15:03:00 2022
+Type: SIGUSR2, Current Time Sent: Wed Nov 30 15:03:00 2022
+Type: SIGUSR2, Current Time Sent: Wed Nov 30 15:03:00 2022
+Type: SIGUSR1, Current Time Sent: Wed Nov 30 15:03:01 2022
+Type: SIGUSR1, Current Time Sent: Wed Nov 30 15:03:01 2022
+Type: SIGUSR2, Current Time Sent: Wed Nov 30 15:03:01 2022
+Type: SIGUSR2, Current Time Sent: Wed Nov 30 15:03:01 2022
+Type: SIGUSR1, Current Time Sent: Wed Nov 30 15:03:01 2022
+Type: SIGUSR1, Current Time Sent: Wed Nov 30 15:03:01 2022
+Type: SIGUSR1, Current Time Sent: Wed Nov 30 15:03:01 2022
+Type: SIGUSR1, Current Time Sent: Wed Nov 30 15:03:01 2022
+Type: SIGUSR2, Current Time Sent: Wed Nov 30 15:03:01 2022
+Type: SIGUSR2, Current Time Sent: Wed Nov 30 15:03:01 2022
+Type: SIGUSR1, Current Time Sent: Wed Nov 30 15:03:01 2022
+Type: SIGUSR1, Current Time Sent: Wed Nov 30 15:03:01 2022
+Type: SIGUSR1, Current Time Sent: Wed Nov 30 15:03:01 2022
+Type: SIGUSR2, Current Time Sent: Wed Nov 30 15:03:01 2022
+Type: SIGUSR1, Current Time Sent: Wed Nov 30 15:03:01 2022
+Type: SIGUSR2, Current Time Sent: Wed Nov 30 15:03:01 2022
+Type: SIGUSR1, Current Time Sent: Wed Nov 30 15:03:01 2022
+Type: SIGUSR1, Current Time Sent: Wed Nov 30 15:03:01 2022
+Type: SIGUSR2, Current Time Sent: Wed Nov 30 15:03:01 2022
+Type: SIGUSR1, Current Time Sent: Wed Nov 30 15:03:02 2022
+Type: SIGUSR2, Current Time Sent: Wed Nov 30 15:03:02 2022

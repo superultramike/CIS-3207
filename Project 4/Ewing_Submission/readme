@@ -1,0 +1,19 @@
+TESTING
+	In terms of testing I wanted to test in short and long term intervals with the short interval
+	being about 10 secs and then a long term interval being about 30 secs. Give how fast and how quickly
+	the program produces signals, I'd say 30 secs is a fairly long time to produce more then 500 signals
+	or more.
+	
+	To view testing results for short 10 sec test, view the text files within the "10 secs data" folder
+	
+	To view testing results for long 30 sec test, view the text files within the "30 secs data" folder
+
+DISCUSSION
+	Involving a discussion with this type of testing needs to acknowledge the capabilities of possible bias
+	or the general conditions to produce said results. The computer that I ran these tests on were on a 
+	typical "gaming" PC with high performance in CPU speed, RAM speed, in addition to a fast SSD M.2 drive.
+	So given those general conditions it makes sense that the following tests would perform accurately given
+	that the amount of lines present in the sent_signa file matches the amount of lines in the received_signal
+	file, meaning that we successfully sent and received the correct amount for each test even while producing
+	15-18 signals a second with good timing on print outs. As a result of this successful test, signal loss was
+	non-existent.
