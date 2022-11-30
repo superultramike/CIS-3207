@@ -26,9 +26,6 @@ int main(int argc, char **argv) {
         arguments[0] = "catcher";
         arguments[1] = NULL;
 
-
-        //char* argument_list[] = {"catcher", NULL}; // NULL terminated array of char* strings
-
         if(execvp("./catcher", arguments) < 0) {
             perror("execvp");
             return 1;
@@ -42,19 +39,31 @@ int main(int argc, char **argv) {
             printf("Generating Signal\n");
             fflush(stdout);
             int random = rand() % ((2+1)-1)+1;
+            // If 1 then send SIGUSR1
             if(random == 1) {
                 printf("Sending signal: SIGUSR1\n");
                 fflush(stdout);
                 if(kill(pid, SIGUSR1) < 0) {
                     perror("kill");
                 }
+                FILE *fp1;
+                fp1 = fopen("sent_signal.txt", "a");
+                fprintf(fp1, "Type: SIGUSR1, Time: %d\n", random);
+                // Close file pointer
+                fclose(fp1);
             }
+            // If not then send SIGUSR2
             else {
                 printf("Sending signal: SIGUSR2\n");
                 fflush(stdout);
                 if(kill(pid, SIGUSR2) < 0) {
                     perror("kill");
                 }
+                FILE *fp2;
+                fp2 = fopen("sent_signal.txt", "a");
+                fprintf(fp2, "Type: SIGUSR2, Time: %d\n", random);
+                // Close file pointer
+                fclose(fp2);
             }
             int sleepTime = (rand() % (100000 - 10000 + 1)) + 10000;
             // get rand between 0.01-0.1 secs
